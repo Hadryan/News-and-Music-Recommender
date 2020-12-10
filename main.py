@@ -1,9 +1,12 @@
+import sys
+
 import feedparser
 import io
-import sched
 import time
 from newspaper import Article
 import threading
+import csv
+from datetime import datetime, timedelta
 
 categorieEn = [
     'https://news.google.com/news/rss/headlines/section/topic/BUSINESS?hl=en-US&gl=US',
@@ -15,7 +18,7 @@ categorieEn = [
     'https://news.google.com/news/rss/headlines/section/topic/SPORTS?hl=en-US&gl=US',
     'https://news.google.com/news/rss/headlines/section/topic/SCIENCE?hl=en-US&gl=US',
     'https://news.google.com/news/rss/headlines/section/topic/HEALTH?hl=en-US&gl=US',
-    'https://news.google.com/rss?hl=us-US&gl=IT&ceid=US:en'
+    'https://news.google.com/rss?hl=us-US&gl=US&ceid=US:en'
 ]
 
 categorieIt = [
@@ -36,6 +39,8 @@ categorieIt = [
 # fileName = "newsIta.csv"/"newsEn.csv"
 def readFeedRss(categorie_lan, lan, fileName):
     categorie = categorie_lan
+
+    now = datetime.now()
 
     i = 0
     for c in categorie:
@@ -71,14 +76,21 @@ def readFeedRss(categorie_lan, lan, fileName):
                 top_image = article.top_image
                 image = top_image
             except:
-                image = ""
+                image = "null"
 
             if not checkFile(article_title, fileName):
                 with io.open(fileName, "a", encoding="utf-8") as myfile:
-                    myfile.write(article_title + ";")
-                    myfile.write(article_link + ";")
-                    myfile.write(image + ";")
-                    myfile.write(cat + "\n")
+
+                    if not (
+                            ";" in article_link or ";" in image):  # se sono presenti i ; nei link e nelle immagini allora non scrivo la notizia
+                        article_title = article_title.replace(';',
+                                                              ' ')  # sostituisco il ; se presente nel titolo con uno spazio
+                        myfile.write(article_title + ";")
+
+                        myfile.write(article_link + ";")
+                        myfile.write(image + ";")
+                        myfile.write(cat + ";")
+                        myfile.write(str(datetime.timestamp(now)) + "\n")  # timestamp
 
 
 def checkFile(link, fileName):
@@ -101,7 +113,7 @@ def checkFile(link, fileName):
     return False
 
 
-def runFeed():
+def runFeed(daysLimit):
     # creating thread
     t1 = threading.Thread(target=readFeedRss, args=(categorieIt, 'it', "newsIta.csv",))
     t2 = threading.Thread(target=readFeedRss, args=(categorieEn, 'en', "newsEn.csv",))
@@ -119,11 +131,52 @@ def runFeed():
     t2.join()
 
     # both threads completely executed
-    print("Done!")
+    print("Feed ita/en completed!")
+
+    # delete old news
+    deleteNews("newsIta.csv", daysLimit)
+    deleteNews("newsEn.csv", daysLimit)
+    print('News meno recenti eliminate')
 
 
-WAIT_SECONDS = 30
+# Cancella le news meno recenti dal file csv
+def deleteNews(fileName, daysLimit):
+    now = datetime.now()
+
+    # make a day limit
+    datelimit = datetime.today() - timedelta(days=daysLimit)
+
+    # list of news to delete
+    newsRecent = list()
+
+    # Prendo tutte le date più recenti presenti nel file
+    with open(fileName, 'r', encoding='utf-8') as file:
+        reader = csv.reader(file, delimiter=';')
+        for row in reader:
+            try:
+                dt_object = datetime.fromtimestamp(float(row[4]))
+
+                if dt_object >= datelimit:  # se la data nel file è più recente la salvo nella lista
+                    newsRecent.append(row)
+            except:
+                print('')
+
+    # Scrivo nel file solo quelle recenti
+    with open(fileName, 'w+', encoding="utf-8", newline='') as result_file:
+        wr = csv.writer(result_file, delimiter=';')
+        wr.writerows(newsRecent)
+
+
+try:
+    timeReload = sys.argv[1]  # ore
+    timeClean = sys.argv[2]  # giorni
+except:
+    timeReload = 12  # ore
+    timeClean = 2  # giorni
+
+
+WAIT_SECONDS = 2
 ticker = threading.Event()
 while not ticker.wait(WAIT_SECONDS):
-    runFeed()
-    WAIT_SECONDS = 60*60*12
+    runFeed(timeClean)  # come argomento si imposta il limite di giorni per le news da eliminare
+    WAIT_SECONDS = 60 * 60 * timeReload
