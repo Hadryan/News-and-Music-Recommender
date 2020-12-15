@@ -1,15 +1,14 @@
 from enum import Enum
 import json
-
+import io
 import csv
 import gensim.downloader as api
 import gensim.parsing.preprocessing as pp
 import numpy as np
 import pandas as pd
-from gensim.models.doc2vec import Doc2Vec
-from gensim.models.fasttext import load_facebook_model
-from lenskit.datasets import ML1M
 from scipy import spatial
+from os import walk
+import os
 
 
 class Technique(Enum):
@@ -51,63 +50,77 @@ def calculate_centroid(text):
     return np.array([])
 
 
-def getAllNews(fileName):
+def getAllNews(fileName,email,query):
     with open(fileName, 'r', encoding='utf-8') as file:
         reader = csv.reader(file, delimiter=';')
         for row in reader:
-            pp_news = pp.preprocess_string(row[5],
+            if row[5] and len(row[5]) > 10:
+
+                pp_news = pp.preprocess_string(row[5],
                                            CUSTOM_FILTERS)  # Faccio il pre-processing della descrizione della notizia
 
-            # Calcolo il centroide per ogni news
-            newsVector = calculate_centroid(pp_news)
+                # Calcolo il centroide per ogni news
+                newsVector = calculate_centroid(pp_news)
 
-            # Calcolo la cosine similarity tra il centroide della news ed il centroide della preferenza dell'utente
-            cos_sim = 1 - spatial.distance.cosine(query, newsVector)
+                # Calcolo la cosine similarity tra il centroide della news ed il centroide della preferenza dell'utente
+                cos_sim = 1 - spatial.distance.cosine(query, newsVector)
+                # Ordino in ordine decrescente la cosine similarity
+                # cosine_similarities.sort(reverse=True)
+                with io.open("ratings.csv", "a", encoding="utf-8") as myfile:
+                    myfile.write(email+ ";")
+                    myfile.write(row[1]+";")
+                    myfile.write('{} \n'.format(cos_sim))
+                    #print(pp_news) # descrizione pre-processata
 
-            print(cos_sim) # cosine similarity
-            print(pp_news) # descrizione pre-processata
-            print(row[1]) # link
-            print('\n')
-
+    myfile.close()
     file.close()
     return ''
 
 
-# Lettura file JSON
-# Apertura file JSON
-f = open('fileMyrror/data.json')
 
-# Ritorna JSON come oggetto
-data = json.load(f)
 
-# Chiusura del file JSON
-f.close()
 
-# Lista contenente le preferenze positive dell'utente
-preferencePositive = []
 
-# Itero attraverso la lista JSON
-for i in data['interests']:
+def readProfile(file,email):
+    # Lettura file JSON
+    # Apertura file JSON
+    f = open('fileMyrror/'+file)
 
-    # Se abbiamo una preferenza positiva dell'utente per le news
-    if i['source'] == 'news_preference' and 'Like:' in i['value'] and not ('Dislike:' in i['value']):
-        data = i['value'].replace('Like:', '').replace('Topic:', '').split()
-        preferencePositive.append(data)
+    # Ritorna JSON come oggetto
+    data = json.load(f)
 
-# Trasformo la lista in un array numpy e riduco la dimensionalità ad un singolo vettore
-preferencePositiveArray = np.hstack(preferencePositive)
+    # Chiusura del file JSON
+    f.close()
+
+    # Lista contenente le preferenze positive dell'utente
+    preferencePositive = []
+
+    # Itero attraverso la lista JSON
+    for i in data['interests']:
+
+        # Se abbiamo una preferenza positiva dell'utente per le news
+        if i['source'] == 'news_preference' and 'Like:' in i['value'] and not ('Dislike:' in i['value']):
+            data = i['value'].replace('Like:', '').replace('Topic:', '').split()
+            preferencePositive.append(data)
+
+
+
+    if preferencePositive and preferencePositive != [] and len(preferencePositive) >= 2:
+        #print(email)
+        # Trasformo la lista in un array numpy e riduco la dimensionalità ad un singolo vettore
+        preferencePositiveArray = np.hstack(preferencePositive)
+        # Calcolo il centroide delle preferenze positive dell'utente per le news
+        query = calculate_centroid(preferencePositiveArray)
+        # Lettura descrizione degli articoli presenti nel file news.csv
+        allNews = getAllNews('newsIta.csv',email,query)
+
 
 # Utilizzo Word2Vec
 wv = api.load('word2vec-google-news-300')
 
-# Calcolo il centroide delle preferenze positive dell'utente per le news
-query = calculate_centroid(preferencePositiveArray)
-
-# Lettura descrizione degli articoli presenti nel file news.csv
-allNews = getAllNews('newsIta.csv')
-
-
-#Ordino in ordine decrescente la cosine similarity
-#cosine_similarities.sort(reverse=True)
-
-
+for (dirpath, dirnames, filenames) in walk("fileMyrror"):
+    for file in filenames:
+        if file.startswith('past_'):
+            email = file.split("past_", 1)[1]
+            email = os.path.splitext(email)[0]
+            readProfile(file,email)

@@ -11,33 +11,61 @@ from bs4 import BeautifulSoup
 
 
 categorieEn = [
-    #'https://news.google.com/news/rss/headlines/section/topic/BUSINESS?hl=en-US&gl=US',
-    #'https://news.google.com/news/rss/headlines/section/topic/TECHNOLOGY?hl=en-US&gl=US',
 
-    #'https://news.google.com/news/rss/headlines/section/topic/WORLD?hl=en-US&gl=US',
-    #'https://news.google.com/news/rss/headlines/section/topic/ENTERTAINMENT?hl=en-US&gl=US',
+    'https://news.google.com/news/rss/headlines/section/topic/BUSINESS?hl=en-US&gl=US',
+    'https://news.google.com/news/rss/headlines/section/topic/TECHNOLOGY?hl=en-US&gl=US',
 
-    #'https://news.google.com/news/rss/headlines/section/topic/SPORTS?hl=en-US&gl=US',
-    #'https://news.google.com/news/rss/headlines/section/topic/SCIENCE?hl=en-US&gl=US',
-    #'https://news.google.com/news/rss/headlines/section/topic/HEALTH?hl=en-US&gl=US',
-    #'https://news.google.com/rss?hl=us-US&gl=US&ceid=US:en',
-    #'http://xml2.corriereobjects.it/rss/english.xml',
-    'https://www.ansa.it/english/english_rss.xml'
+    'https://news.google.com/news/rss/headlines/section/topic/WORLD?hl=en-US&gl=US',
+    'https://news.google.com/news/rss/headlines/section/topic/ENTERTAINMENT?hl=en-US&gl=US',
+
+    'https://news.google.com/news/rss/headlines/section/topic/SPORTS?hl=en-US&gl=US',
+    'https://news.google.com/news/rss/headlines/section/topic/SCIENCE?hl=en-US&gl=US',
+    'https://news.google.com/news/rss/headlines/section/topic/HEALTH?hl=en-US&gl=US',
+    'https://news.google.com/rss?hl=us-US&gl=US&ceid=US:en',
+    'http://xml2.corriereobjects.it/rss/english.xml',
+    'https://www.ansa.it/english/english_rss.xml',
+    'https://www.utah.gov/whatsnew/rss.xml',
+    'https://www.buzzfeed.com/world.xml',
+    'https://www.theguardian.com/world/rss',
+    'https://www.cnbc.com/id/100727362/device/rss/rss.html',
+    'https://www.euronews.com/rss?level=theme&name=news',
+    'https://www.pbs.org/wgbh/nova/rss/all/'
 ]
 
 categorieIt = [
-    #'https://news.google.com/news/rss/headlines/section/topic/BUSINESS?hl=it-IT&gl=IT',
-    #'https://news.google.com/news/rss/headlines/section/topic/TECHNOLOGY?hl=it-IT&gl=IT',
+    'https://news.google.com/news/rss/headlines/section/topic/BUSINESS?hl=it-IT&gl=IT',
+    'https://news.google.com/news/rss/headlines/section/topic/TECHNOLOGY?hl=it-IT&gl=IT',
 
-    #'https://news.google.com/news/rss/headlines/section/topic/WORLD?hl=it-IT&gl=IT',
-    #'https://news.google.com/news/rss/headlines/section/topic/ENTERTAINMENT?hl=it-IT&gl=IT',
+    'https://news.google.com/news/rss/headlines/section/topic/WORLD?hl=it-IT&gl=IT',
+    'https://news.google.com/news/rss/headlines/section/topic/ENTERTAINMENT?hl=it-IT&gl=IT',
 
-    #'https://news.google.com/news/rss/headlines/section/topic/SPORTS?hl=it-IT&gl=IT',
-    #'https://news.google.com/news/rss/headlines/section/topic/SCIENCE?hl=it-IT&gl=IT',
-    #'https://news.google.com/news/rss/headlines/section/topic/HEALTH?hl=it-IT&gl=IT',
-    #'https://news.google.com/rss?hl=it-IT&gl=IT&ceid=IT:it',
-    #'http://xml2.corriereobjects.it/rss/homepage.xml',
-    'https://www.ansa.it/sito/notizie/cultura/cultura_rss.xml'
+    'https://news.google.com/news/rss/headlines/section/topic/SPORTS?hl=it-IT&gl=IT',
+    'https://news.google.com/news/rss/headlines/section/topic/SCIENCE?hl=it-IT&gl=IT',
+    'https://news.google.com/news/rss/headlines/section/topic/HEALTH?hl=it-IT&gl=IT',
+    'https://news.google.com/rss?hl=it-IT&gl=IT&ceid=IT:it',
+
+    'http://xml2.corriereobjects.it/rss/homepage.xml',
+    'https://www.ansa.it/sito/notizie/cultura/cultura_rss.xml',
+    'http://rss.adnkronos.com/RSS_Sostenibilita.xml',
+   'http://rss.adnkronos.com/RSS_Economia.xml',
+   'http://rss.adnkronos.com/RSS_CyberNews.xml',
+   'http://rss.adnkronos.com/RSS_Labitalia.xml',
+    'http://rss.adnkronos.com/RSS_Immediapress.xml',
+    'https://www.ansa.it/sito/notizie/cultura/cultura_rss.xml',
+    'https://www.ilsole24ore.com/rss/salute.xml',
+    'https://www.gazzetta.it/rss/home.xml',
+    'https://www.ilsole24ore.com/rss/moda.xml',
+    'https://www.ilsole24ore.com/rss/arteconomy.xml',
+    'https://www.ilsole24ore.com/rss/finanza.xml',
+    'https://www.ilsole24ore.com/rss/norme-e-tributi.xml',
+    'https://www.ilsole24ore.com/rss/food.xml',
+    'https://www.ansa.it/canale_terraegusto/notizie/terraegusto_rss.xml',
+    'https://www.ilsole24ore.com/rss/management.xml',
+    'https://www.ilsole24ore.com/rss/risparmio.xml',
+    'https://www.ilsole24ore.com/rss/cultura.xml',
+    'https://www.ilsole24ore.com/rss/tecnologia.xml',
+    'https://www.ilsole24ore.com/rss/mondo.xml',
+    'https://www.ansa.it/europa/notizie/rss.xml'
 ]
 
 
