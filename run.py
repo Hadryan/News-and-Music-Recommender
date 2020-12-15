@@ -51,8 +51,7 @@ def calculate_centroid(text):
     return np.array([])
 
 
-def getNewsRecommendation(fileName, email, query):
-
+def getNewsRecommendation(fileName, email, query, fileRatings):
     userNews = []  # Contiene una lista di news per un utente con [email, link news, cosine]
 
     with open(fileName, 'r', encoding='utf-8') as file:
@@ -60,7 +59,7 @@ def getNewsRecommendation(fileName, email, query):
         for row in reader:
 
             if row[5] and len(row[5]) > 10:
-                news = [] # creo lista vuota che ocnterrà le info dell'utente per una determinata news
+                news = []  # creo lista vuota che ocnterrà le info dell'utente per una determinata news
 
                 pp_news = pp.preprocess_string(row[5],
                                                CUSTOM_FILTERS)  # Faccio il pre-processing della descrizione della notizia
@@ -84,8 +83,8 @@ def getNewsRecommendation(fileName, email, query):
     # Ordino in ordine decrescente la cosine similarity
     userNews.sort(key=itemgetter(2), reverse=True)
 
-    #Scrivo nel file i ratings per le news dell'utente
-    with io.open("ratings.csv", "a", encoding="utf-8") as myfile:
+    # Scrivo nel file i ratings per le news dell'utente
+    with io.open(fileRatings, "a", encoding="utf-8") as myfile:
 
         for news in userNews:
             myfile.write(news[0] + ";")
@@ -93,13 +92,13 @@ def getNewsRecommendation(fileName, email, query):
             myfile.write('{} \n'.format(news[2]))
             # print(pp_news) # descrizione pre-processata
 
+    print('File ' + fileRatings + ' creato!')
     myfile.close()
 
     return ''
 
 
 def readProfile(file, email):
-
     # Apertura file JSON
     f = open('fileMyrror/' + file)
 
@@ -118,6 +117,10 @@ def readProfile(file, email):
         # Se abbiamo una preferenza positiva dell'utente per le news
         if i['source'] == 'news_preference' and 'Like:' in i['value'] and not ('Dislike:' in i['value']):
             data = i['value'].replace('Like:', '').replace('Topic:', '').split()
+
+            pp.preprocess_string(data,
+                                 CUSTOM_FILTERS)  # Faccio il pre-processing della preferenza dell'utente
+
             preferencePositive.append(data)
 
     if preferencePositive and preferencePositive != [] and len(preferencePositive) >= 2:
@@ -127,9 +130,12 @@ def readProfile(file, email):
         # Calcolo il centroide delle preferenze positive dell'utente per le news
         query = calculate_centroid(preferencePositiveArray)
 
-        # Lettura descrizione degli articoli presenti nel file news.csv
-        allNews = getNewsRecommendation('newsIta.csv', email, query)
+        # Raccomandazioni
+        getNewsRecommendation('newsIta.csv', email, query, "ratings.csv")  # ITA
+        getNewsRecommendation('newsEN.csv', email, query, "ratingsEN.csv")  # EN
 
+
+#----------------------------------------------------------------------------------------------------------------------------------------------
 
 # Utilizzo Word2Vec
 wv = api.load('word2vec-google-news-300')
