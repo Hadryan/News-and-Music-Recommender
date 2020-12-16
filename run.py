@@ -87,12 +87,12 @@ def getNewsRecommendation(fileName, email, query, fileRatings):
     with io.open(fileRatings, "a", encoding="utf-8") as myfile:
 
         for news in userNews:
-            myfile.write(news[0] + ";")
-            myfile.write(news[1] + ";")
-            myfile.write('{} \n'.format(news[2]))
+            myfile.write(news[0] + ";") # email
+            myfile.write(news[1] + ";") # link
+            myfile.write('{} \n'.format(news[2])) # cosine similarity
             # print(pp_news) # descrizione pre-processata
 
-    print('File ' + fileRatings + ' creato!')
+    print('Scrittura in ' + fileRatings + ' avvenuta per ' + email + '!')
     myfile.close()
 
     return ''
@@ -114,12 +114,22 @@ def readProfile(file, email):
     # Itero attraverso la lista JSON
     for i in data['interests']:
 
-        # Se abbiamo una preferenza positiva dell'utente per le news
-        if i['source'] == 'news_preference' and 'Like:' in i['value'] and not ('Dislike:' in i['value']):
-            data = i['value'].replace('Like:', '').replace('Topic:', '').split()
+        '''
+        1) Creare un array in cui salviamo tutti i link che l'utente ha valutato positivamente
+        Nella lettura degli articoli presenti nel file delle news controlliamo che gli articoli che già piacciono all'utente
+        non vengano letti e reinseriti nel file di 'ratings'
+        2) Il file 'ratings' aperto in scrittura deve essere riscritto da capo ogni volta?
+        '''
 
-            pp.preprocess_string(data,
-                                 CUSTOM_FILTERS)  # Faccio il pre-processing della preferenza dell'utente
+        # Se abbiamo una preferenza positiva dell'utente per le news
+        if i['source'] == 'news_preference' and 'Like:' in i['value'] and not ('Dislike:' in i['value']) and \
+                not (i['value'].startswith('URL:')):
+
+            data = i['value'].replace('Like:', '').replace('Topic:', '')
+
+            if len(data) > 5:
+                data = pp.preprocess_string(data,
+                                            CUSTOM_FILTERS)  # Faccio il pre-processing della preferenza dell'utente
 
             preferencePositive.append(data)
 
@@ -133,9 +143,10 @@ def readProfile(file, email):
         # Raccomandazioni
         getNewsRecommendation('newsIta.csv', email, query, "ratings.csv")  # ITA
         getNewsRecommendation('newsEN.csv', email, query, "ratingsEN.csv")  # EN
+        print('\n')
 
 
-#----------------------------------------------------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------------------------------
 
 # Utilizzo Word2Vec
 wv = api.load('word2vec-google-news-300')
