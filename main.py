@@ -1,5 +1,5 @@
 import sys
-
+import run
 import feedparser
 import io
 import time
@@ -8,7 +8,6 @@ import threading
 import csv
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
-
 
 categorieEn = [
 
@@ -47,9 +46,9 @@ categorieIt = [
     'http://xml2.corriereobjects.it/rss/homepage.xml',
     'https://www.ansa.it/sito/notizie/cultura/cultura_rss.xml',
     'http://rss.adnkronos.com/RSS_Sostenibilita.xml',
-   'http://rss.adnkronos.com/RSS_Economia.xml',
-   'http://rss.adnkronos.com/RSS_CyberNews.xml',
-   'http://rss.adnkronos.com/RSS_Labitalia.xml',
+    'http://rss.adnkronos.com/RSS_Economia.xml',
+    'http://rss.adnkronos.com/RSS_CyberNews.xml',
+    'http://rss.adnkronos.com/RSS_Labitalia.xml',
     'http://rss.adnkronos.com/RSS_Immediapress.xml',
     'https://www.ansa.it/sito/notizie/cultura/cultura_rss.xml',
     'https://www.ilsole24ore.com/rss/salute.xml',
@@ -103,7 +102,7 @@ def readFeedRss(categorie_lan, lan, fileName):
             article_title = entry.title
             article_link = entry.link
 
-            soup = BeautifulSoup(entry.description, features="lxml") # contenuto della notizia
+            soup = BeautifulSoup(entry.description, features="lxml")  # contenuto della notizia
             texts = soup.findAll(text=True)
             article_description = ' '.join(texts)
 
@@ -116,7 +115,7 @@ def readFeedRss(categorie_lan, lan, fileName):
             except:
                 image = "null"
 
-            if not checkFile(article_title, fileName):
+            if (not checkFile(article_title, fileName)) and (len(article_description) > 10):
                 with io.open(fileName, "a", encoding="utf-8") as myfile:
 
                     if not (
@@ -135,7 +134,7 @@ def readFeedRss(categorie_lan, lan, fileName):
                         myfile.write(article_description + "\n")
 
 
-#Controlla i doppi inserimenti nel file
+# Controlla i doppi inserimenti nel file
 def checkFile(link, fileName):
     f = open(fileName, "r", encoding="utf8")
     count = 0
@@ -217,9 +216,9 @@ except:
     timeReload = 12  # ore
     timeClean = 2  # giorni
 
-
 WAIT_SECONDS = 2
 ticker = threading.Event()
 while not ticker.wait(WAIT_SECONDS):
     runFeed(timeClean)  # come argomento si imposta il limite di giorni per le news da eliminare
     WAIT_SECONDS = 60 * 60 * timeReload
+    #run.mainRun() # chiamo run.py
