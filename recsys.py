@@ -22,6 +22,11 @@ CUSTOM_FILTERS = [lambda x: x.lower(), pp.strip_tags,
                   pp.strip_punctuation, pp.remove_stopwords,
                   pp.split_alphanum, pp.strip_multiple_whitespaces]
 
+NEWS_FILTERS = [lambda x: x.lower(), pp.strip_tags,
+                pp.strip_punctuation,
+                pp.split_alphanum, pp.strip_multiple_whitespaces,
+                pp.strip_numeric]
+
 
 def calculate_centroid(text, modeApi):
     vectors = list()
@@ -43,9 +48,10 @@ def calculate_centroid(text, modeApi):
         return np.asarray(vectors).mean(axis=0)
     return np.array([])
 
-def getNewsRecommendationW2V(fileName, email, preference, fileRatings,alreadyLiked):
+
+def getNewsRecommendationW2V(fileName, email, preference, fileRatings, alreadyLiked):
     userNews = []  # Contiene una lista di news per un utente con [email, link news, cosine]
-    query = calculate_centroid(preference,1)
+    query = calculate_centroid(preference, 1)
     with open(fileName, 'r', encoding='utf-8') as file:
         reader = csv.reader(file, delimiter=';')
         for row in reader:
@@ -57,7 +63,7 @@ def getNewsRecommendationW2V(fileName, email, preference, fileRatings,alreadyLik
                                                CUSTOM_FILTERS)  # Faccio il pre-processing della descrizione della notizia
 
                 if len(pp_news) > 2:
-                    #print(pp_news)
+                    # print(pp_news)
                     # Calcolo il centroide per ogni news
                     newsVector = calculate_centroid(pp_news, 1)
 
@@ -92,9 +98,10 @@ def getNewsRecommendationW2V(fileName, email, preference, fileRatings,alreadyLik
 
     return ''
 
-def getNewsRecommendationFastText(fileName, email, preference, fileRatings,alreadyLiked):
+
+def getNewsRecommendationFastText(fileName, email, preference, fileRatings, alreadyLiked):
     userNews = []  # Contiene una lista di news per un utente con [email, link news, cosine]
-    query = calculate_centroid(preference, 1)
+    query = calculate_centroid(preference, 2)
     with open(fileName, 'r', encoding='utf-8') as file:
         reader = csv.reader(file, delimiter=';')
         for row in reader:
@@ -139,9 +146,10 @@ def getNewsRecommendationFastText(fileName, email, preference, fileRatings,alrea
 
     return ''
 
-def getNewsRecommendationDoc2Vec(fileName, email, preference, fileRatings,alreadyLiked):
+
+def getNewsRecommendationDoc2Vec(fileName, email, preference, fileRatings, alreadyLiked):
     userNews = []  # Contiene una lista di news per un utente con [email, link news, cosine]
-    query = calculate_centroid(preference,1)
+    query = calculate_centroid(preference, 3)
     with open(fileName, 'r', encoding='utf-8') as file:
         reader = csv.reader(file, delimiter=';')
         for row in reader:
@@ -153,7 +161,6 @@ def getNewsRecommendationDoc2Vec(fileName, email, preference, fileRatings,alread
                                                CUSTOM_FILTERS)  # Faccio il pre-processing della descrizione della notizia
 
                 if len(pp_news) > 2:
-
                     # Calcolo il centroide per ogni news
                     newsVector = calculate_centroid(pp_news, 3)
 
@@ -188,22 +195,23 @@ def getNewsRecommendationDoc2Vec(fileName, email, preference, fileRatings,alread
 
     return ''
 
-def getNewsRecommendationLsi(fileName, email, query, fileRatings,alreadyLiked):
 
-    #query = "elon musk tesla tecnologia spacex hyperloop viaggiare spazio scienza galileo hardware droni marte"
+def getNewsRecommendationLsi(fileName, email, query, fileRatings, alreadyLiked):
+    # query = "elon musk tesla tecnologia spacex hyperloop viaggiare spazio scienza galileo hardware droni marte"
     textCorpus = []  # Contiene una lista di news per un utente con [email, link news, cosine]
     textCorpus.append(query)
     newsdf = []
-    #print(query)
+    # print(query)
     with open(fileName, 'r', encoding='utf-8') as file:
         reader = csv.reader(file, delimiter=';')
         for row in reader:
 
             if row[5] and len(row[5]) > 10:
-                pp_news = pp.preprocess_string(row[5],CUSTOM_FILTERS)  # Faccio il pre-processing della descrizione della notizia
+                pp_news = pp.preprocess_string(row[5],
+                                               CUSTOM_FILTERS)  # Faccio il pre-processing della descrizione della notizia
 
                 if len(pp_news) > 2:
-                # processed_corpus.append(pp_news)
+                    # processed_corpus.append(pp_news)
                     textCorpus.append(row[5])
                     newsdf.append(row)
 
@@ -224,24 +232,30 @@ def getNewsRecommendationLsi(fileName, email, query, fileRatings,alreadyLiked):
 
     for s in sorted(enumerate(sims), key=lambda item: -item[1])[:10]:
 
-        if not (newsdf[s[0] -1][1] in alreadyLiked):
+        if not (newsdf[s[0] - 1][1] in alreadyLiked):
             with io.open(fileRatings, "a", encoding="utf-8") as myfile:
                 myfile.write(email + ";")
-                myfile.write(newsdf[s[0] -1][1] + ";")
+                myfile.write(newsdf[s[0] - 1][1] + ";")
                 myfile.write('{} \n'.format(s[1]))
 
             myfile.close()
     file.close()
 
+    print('Scrittura in ' + fileRatings + ' avvenuta per ' + email + '!')
+
     return ''
 
-def profileBuilder(file, email,Technique):
+
+def profileBuilder(file, email, Technique):
     # Apertura file JSON
     f = open('fileMyrror/' + file)
+
     # Ritorna JSON come oggetto
     data = json.load(f)
+
     # Chiusura del file JSON
     f.close()
+
     # Lista contenente le preferenze positive dell'utente
     preferenceIT = []
     preferenceEN = []
@@ -264,9 +278,16 @@ def profileBuilder(file, email,Technique):
         if i['source'] == 'news_preference' and 'Like:' in i['value'] and not ('Dislike:' in i['value']) and \
                 not (i['value'].startswith('URL:')):
             data = i['value'].replace('Like:', '').replace('Topic:', '')
+
+
             if len(data) > 2:
                 if data.endswith('::it'):
-                    preferenceIT.append(data.replace('::it', ''))
+
+                    data = data.replace('::it', '')
+                    pp_news = pp.preprocess_string(pp.strip_short(data, minsize=3),
+                                                   NEWS_FILTERS)  # Faccio il pre-processing della descrizione della notizia
+
+                    preferenceIT.append(pp_news)
                     queryIT += " " + data.replace('::it', '')
                 elif data.endswith('::en'):
                     preferenceEN.append(data.replace('::en', ''))
@@ -278,8 +299,7 @@ def profileBuilder(file, email,Technique):
                     queryIT += " " + data
 
     if len(queryEN) > 10 and len(preferenceEN) >= 2:
-        #preferencePositiveEN = preprocess_documents(queryEN)
-        preferencePositiveEN =  np.hstack(queryEN)
+        preferencePositiveEN = np.hstack(queryEN)
         if Technique == 1:
 
             getNewsRecommendationW2V('newsEN.csv', email, preferencePositiveEN, "rec_en.csv", alreadyLiked)
@@ -291,7 +311,6 @@ def profileBuilder(file, email,Technique):
             getNewsRecommendationLsi('newsEn.csv', email, queryEN, "rec_en.csv", alreadyLiked)
 
     if len(queryIT) > 10 and len(preferenceIT) >= 2:
-        #preferencePositiveIT = preprocess_documents(queryIT)
         preferencePositiveIT = np.hstack(queryIT)
         if Technique == 1:
             getNewsRecommendationW2V('newsIta.csv', email, preferencePositiveIT, "rec_it.csv", alreadyLiked)  # ITA
@@ -301,11 +320,6 @@ def profileBuilder(file, email,Technique):
             getNewsRecommendationDoc2Vec('newsIta.csv', email, preferencePositiveIT, "rec_it.csv", alreadyLiked)  # ITA
         else:
             getNewsRecommendationLsi('newsIta.csv', email, queryIT, "rec_it.csv", alreadyLiked)  # ITA
-
-        # Raccomandazioni
-
-
-
 
 
 def mainRun():
@@ -317,7 +331,8 @@ def mainRun():
         f.truncate(0)
     except:
         print("file to be created")
-        #f = open('rec_it.csv', 'w')
+        # f = open('rec_it.csv', 'w')
+
     # Lettura file degli utenti di Myrror
     for (dirpath, dirnames, filenames) in walk("fileMyrror"):
         for file in filenames:
@@ -325,13 +340,14 @@ def mainRun():
                 email = file.split("past_", 1)[1]
                 email = os.path.splitext(email)[0]
 
-                profileBuilder(file, email,Technique)
+                profileBuilder(file, email, Technique)
+
 
 # Utilizzo Word2Vec
-wv = api.load('word2vec-google-news-300')
+# wv = api.load('word2vec-google-news-300')
 
 # Utilizzo FastText
-ft = load_facebook_model('fasttext/wiki.simple.bin')
+# ft = load_facebook_model('fasttext/wiki.simple.bin')
 
 # Utilizzo Doc2Vec
 dv = Doc2Vec.load('doc2vec/doc2vec.bin')
