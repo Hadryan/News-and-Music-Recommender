@@ -1,4 +1,3 @@
-from enum import Enum
 import json
 import io
 import csv
@@ -7,15 +6,13 @@ import gensim.downloader as api
 import gensim.parsing.preprocessing as pp
 from gensim.parsing.preprocessing import preprocess_documents
 import numpy as np
-import pandas as pd
 from scipy import spatial
 from os import walk
 import os
 from operator import itemgetter
-from pprint import pprint as print
-from gensim.models.fasttext import FastText, load_facebook_model
-from gensim.test.utils import datapath
+from gensim.models.fasttext import load_facebook_model
 from gensim.models.doc2vec import Doc2Vec
+import nltk
 
 # pre-processing operations to apply
 CUSTOM_FILTERS = [lambda x: x.lower(), pp.strip_tags,
@@ -86,12 +83,17 @@ def getNewsRecommendationW2V(fileName, email, preference, fileRatings, alreadyLi
     # Scrivo nel file i ratings per le news dell'utente
     with io.open(fileRatings, "a", encoding="utf-8") as myfile:
 
+        i = 0
         for news in userNews:
+            if i > 10:
+                break
+
             if not (news[1] in alreadyLiked):
                 myfile.write(news[0] + ";")  # email
                 myfile.write(news[1] + ";")  # link
                 myfile.write('{} \n'.format(news[2]))  # cosine similarity
                 # print(pp_news) # descrizione pre-processata
+                i = i + 1
 
     print('Scrittura in ' + fileRatings + ' avvenuta per ' + email + '!')
     myfile.close()
@@ -133,13 +135,19 @@ def getNewsRecommendationFastText(fileName, email, preference, fileRatings, alre
 
     # Scrivo nel file i ratings per le news dell'utente
     with io.open(fileRatings, "a", encoding="utf-8") as myfile:
-
+        i = 0
         for news in userNews:
+
+            if i > 10:
+                break
+
             if not (news[1] in alreadyLiked):
                 myfile.write(news[0] + ";")  # email
                 myfile.write(news[1] + ";")  # link
                 myfile.write('{} \n'.format(news[2]))  # cosine similarity
                 # print(pp_news) # descrizione pre-processata
+
+                i = i + 1
 
     print('Scrittura in ' + fileRatings + ' avvenuta per ' + email + '!')
     myfile.close()
@@ -182,13 +190,18 @@ def getNewsRecommendationDoc2Vec(fileName, email, preference, fileRatings, alrea
 
     # Scrivo nel file i ratings per le news dell'utente
     with io.open(fileRatings, "a", encoding="utf-8") as myfile:
-
+        i = 0
         for news in userNews:
+            if i > 10:
+                break
+
             if not (news[1] in alreadyLiked):
                 myfile.write(news[0] + ";")  # email
                 myfile.write(news[1] + ";")  # link
                 myfile.write('{} \n'.format(news[2]))  # cosine similarity
                 # print(pp_news) # descrizione pre-processata
+
+                i = i + 1
 
     print('Scrittura in ' + fileRatings + ' avvenuta per ' + email + '!')
     myfile.close()
@@ -289,14 +302,30 @@ def profileBuilder(file, email, Technique):
 
                     preferenceIT.append(pp_news)
                     queryIT += " " + data.replace('::it', '')
+
+                    print(pp_news)
                 elif data.endswith('::en'):
-                    preferenceEN.append(data.replace('::en', ''))
-                    queryEN += " " + data.replace('::en', '')
+
+                    data = data.replace('::en', '')
+
+                    # TOKENIZATION per la lingua inglese -----------------------------------------------
+                    tokens = nltk.word_tokenize(data)
+                    tagged = nltk.pos_tag(tokens)
+
+                    string = ''
+                    for item in tagged:
+                        if item[1][0] == 'N':
+                            string += item[0] + ' '
+
+                    preferenceEN.append(string)
+                    queryEN += " " + string
+
                 else:
                     preferenceIT.append(data)
                     preferenceEN.append(data)
                     queryEN += " " + data
                     queryIT += " " + data
+
 
     if len(queryEN) > 10 and len(preferenceEN) >= 2:
         preferencePositiveEN = np.hstack(queryEN)
@@ -344,10 +373,10 @@ def mainRun():
 
 
 # Utilizzo Word2Vec
-# wv = api.load('word2vec-google-news-300')
+wv = api.load('word2vec-google-news-300')
 
 # Utilizzo FastText
-# ft = load_facebook_model('fasttext/wiki.simple.bin')
+ft = load_facebook_model('fasttext/wiki.simple.bin')
 
 # Utilizzo Doc2Vec
 dv = Doc2Vec.load('doc2vec/doc2vec.bin')

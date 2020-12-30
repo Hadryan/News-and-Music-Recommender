@@ -1,4 +1,3 @@
-from enum import Enum
 import json
 import io
 import csv
@@ -7,14 +6,11 @@ import gensim.downloader as api
 import gensim.parsing.preprocessing as pp
 from gensim.parsing.preprocessing import preprocess_documents
 import numpy as np
-import pandas as pd
 from scipy import spatial
 from os import walk
 import os
 from operator import itemgetter
-from pprint import pprint as print
-from gensim.models.fasttext import FastText, load_facebook_model
-from gensim.test.utils import datapath
+from gensim.models.fasttext import load_facebook_model
 from gensim.models.doc2vec import Doc2Vec
 
 # pre-processing operations to apply
