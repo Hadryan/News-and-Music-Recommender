@@ -99,7 +99,7 @@ def getMusicRecommendationDoc2Vec(fileName, email, preference, fileRatings, alre
             if i > 10:
                 break
 
-            if not (artist[1] in alreadyLiked):
+            if not (artist[1].lower() in alreadyLiked):
                 i = i + 1
                 myfile.write(artist[0] + ";")  # email
                 myfile.write(artist[1] + ";")  # artista
@@ -169,7 +169,7 @@ def getMusicRecommendationW2V(fileName, email, preference, fileRatings, alreadyL
             if i > 10:
                 break
 
-            if not (artist[1] in alreadyLiked):
+            if not (artist[1].lower() in alreadyLiked):
                 i = i + 1
                 myfile.write(artist[0] + ";")  # email
                 myfile.write(artist[1] + ";")  # artista
@@ -238,7 +238,7 @@ def getMusicRecommendationFastText(fileName, email, preference, fileRatings, alr
             if i > 10:
                 break
 
-            if not (artist[1] in alreadyLiked):
+            if not (artist[1].lower() in alreadyLiked):
                 i = i + 1
                 myfile.write(artist[0] + ";")  # email
                 myfile.write(artist[1] + ";")  # artista
@@ -290,7 +290,7 @@ def getMusicRecommendationLsi(fileName, email, query, fileRatings, alreadyLiked)
 
     for s in sorted(enumerate(sims), key=lambda item: -item[1])[:10]:
 
-        if not (artistdf[s[0] - 1][1] in alreadyLiked):
+        if not (artistdf[s[0] - 1][1].lower() in alreadyLiked):
             with io.open(fileRatings, "a", encoding="utf-8") as myfile:
                 myfile.write(email + ";")
                 myfile.write(artistdf[s[0] - 1][1] + ";")
@@ -329,11 +329,13 @@ def profileBuilder(file, email, Technique):
             data = i['value'].replace('Like:', '').replace('Artist:', '').replace('Genre:', '')
 
             if 'Artist' in i['value']:
-                alreadyLiked.append(data)
+                alreadyLiked.append(data.lower())
 
             if len(data) > 2:
                 preference.append(data)
                 query += " " + data
+
+    print(preference)
 
     if len(query) > 10 and len(preference) >= 3:
 
@@ -368,12 +370,12 @@ def mainRun():
 
 
 # Utilizzo Word2Vec
-wv = api.load('word2vec-google-news-300')
+#wv = api.load('word2vec-google-news-300')
 
 # Utilizzo FastText
-ft = load_facebook_model('fasttext/wiki.simple.bin')
+#ft = load_facebook_model('fasttext/wiki.simple.bin')
 
 # Utilizzo Doc2Vec
-dv = Doc2Vec.load('doc2vec/doc2vec.bin')
+#dv = Doc2Vec.load('doc2vec/doc2vec.bin')
 
 mainRun()

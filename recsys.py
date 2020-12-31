@@ -326,6 +326,8 @@ def profileBuilder(file, email, Technique):
                     queryEN += " " + data
                     queryIT += " " + data
 
+    print(preferenceEN)
+
 
     if len(queryEN) > 10 and len(preferenceEN) >= 2:
         preferencePositiveEN = np.hstack(queryEN)
@@ -352,7 +354,7 @@ def profileBuilder(file, email, Technique):
 
 
 def mainRun():
-    Technique = 3
+    Technique = 2
     try:
         f = open('rec_it.csv', 'r+')
         f.truncate(0)
@@ -373,12 +375,12 @@ def mainRun():
 
 
 # Utilizzo Word2Vec
-wv = api.load('word2vec-google-news-300')
+#wv = api.load('word2vec-google-news-300')
 
 # Utilizzo FastText
 ft = load_facebook_model('fasttext/wiki.simple.bin')
 
 # Utilizzo Doc2Vec
-dv = Doc2Vec.load('doc2vec/doc2vec.bin')
+#dv = Doc2Vec.load('doc2vec/doc2vec.bin')
 
 mainRun()
