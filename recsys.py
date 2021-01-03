@@ -16,8 +16,10 @@ import nltk
 
 # pre-processing operations to apply
 CUSTOM_FILTERS = [lambda x: x.lower(), pp.strip_tags,
-                  pp.strip_punctuation, pp.remove_stopwords,
-                  pp.split_alphanum, pp.strip_multiple_whitespaces]
+                  pp.strip_punctuation,
+                  #pp.remove_stopwords,
+                  #pp.split_alphanum,
+                  pp.strip_multiple_whitespaces]
 
 NEWS_FILTERS = [lambda x: x.lower(), pp.strip_tags,
                 pp.strip_punctuation,
@@ -48,6 +50,7 @@ def calculate_centroid(text, modeApi):
 
 def getNewsRecommendationW2V(fileName, email, preference, fileRatings, alreadyLiked):
     userNews = []  # Contiene una lista di news per un utente con [email, link news, cosine]
+    print(preference)
     query = calculate_centroid(preference, 1)
     with open(fileName, 'r', encoding='utf-8') as file:
         reader = csv.reader(file, delimiter=';')
@@ -85,7 +88,7 @@ def getNewsRecommendationW2V(fileName, email, preference, fileRatings, alreadyLi
 
         i = 0
         for news in userNews:
-            if i > 10:
+            if i > 5:
                 break
 
             if not (news[1] in alreadyLiked):
@@ -210,25 +213,31 @@ def getNewsRecommendationDoc2Vec(fileName, email, preference, fileRatings, alrea
 
 
 def getNewsRecommendationLsi(fileName, email, query, fileRatings, alreadyLiked):
-    # query = "elon musk tesla tecnologia spacex hyperloop viaggiare spazio scienza galileo hardware droni marte"
-    textCorpus = []  # Contiene una lista di news per un utente con [email, link news, cosine]
-    textCorpus.append(query)
+
+    processed_corpus = []
+    processed_corpus.append(query)
     newsdf = []
-    # print(query)
+
     with open(fileName, 'r', encoding='utf-8') as file:
         reader = csv.reader(file, delimiter=';')
         for row in reader:
 
             if row[5] and len(row[5]) > 10:
-                pp_news = pp.preprocess_string(row[5],
-                                               CUSTOM_FILTERS)  # Faccio il pre-processing della descrizione della notizia
+                pp_news = pp.preprocess_string(row[5],CUSTOM_FILTERS)  # Faccio il pre-processing della descrizione della notizia
+                # TOKENIZATION per la lingua inglese -----------------------------------------------
+                '''
+                tokens = nltk.word_tokenize(row[5])
+                tagged = nltk.pos_tag(tokens)
+                for item in tagged:
+                    if item[1][0] == 'N':
+                        pp_news.append(item[0])
+                '''
 
-                if len(pp_news) > 2:
-                    # processed_corpus.append(pp_news)
-                    textCorpus.append(row[5])
+                if len(pp_news) >= 2:
+                    processed_corpus.append(pp_news)
                     newsdf.append(row)
 
-    processed_corpus = preprocess_documents(textCorpus)
+
 
     dictionary = gensim.corpora.Dictionary(processed_corpus)
     bow_corpus = [dictionary.doc2bow(text) for text in processed_corpus]
@@ -236,12 +245,15 @@ def getNewsRecommendationLsi(fileName, email, query, fileRatings, alreadyLiked):
     tfidf = gensim.models.TfidfModel(bow_corpus, smartirs='npu')
     corpus_tfidf = tfidf[bow_corpus]
 
-    lsiModel = gensim.models.LsiModel(corpus_tfidf, num_topics=1000)
+    lsiModel = gensim.models.LsiModel(corpus_tfidf,id2word=dictionary, num_topics=200,chunksize=1)
+    #print(lsiModel.print_topics(num_topics=5,num_words=5))
     index = gensim.similarities.MatrixSimilarity(lsiModel[corpus_tfidf])
-    new_doc = gensim.parsing.preprocessing.preprocess_string(query)
-    new_vec = dictionary.doc2bow(new_doc)
+
+    new_vec = dictionary.doc2bow(query)
+
     vec_bow_tfidf = tfidf[new_vec]
     sims = index[vec_bow_tfidf]
+
 
     for s in sorted(enumerate(sims), key=lambda item: -item[1])[:10]:
 
@@ -298,27 +310,20 @@ def profileBuilder(file, email, Technique):
 
                     data = data.replace('::it', '')
                     pp_news = pp.preprocess_string(pp.strip_short(data, minsize=3),
-                                                   NEWS_FILTERS)  # Faccio il pre-processing della descrizione della notizia
+                                                   CUSTOM_FILTERS)  # Faccio il pre-processing della descrizione della notizia
 
                     preferenceIT.append(pp_news)
                     queryIT += " " + data.replace('::it', '')
 
-                    print(pp_news)
+                    #print(pp_news)
                 elif data.endswith('::en'):
 
                     data = data.replace('::en', '')
+                    pp_news = pp.preprocess_string(pp.strip_short(data, minsize=3),
+                                                   CUSTOM_FILTERS)
 
-                    # TOKENIZATION per la lingua inglese -----------------------------------------------
-                    tokens = nltk.word_tokenize(data)
-                    tagged = nltk.pos_tag(tokens)
-
-                    string = ''
-                    for item in tagged:
-                        if item[1][0] == 'N':
-                            string += item[0] + ' '
-
-                    preferenceEN.append(string)
-                    queryEN += " " + string
+                    preferenceEN.append(pp_news)
+                    queryEN += " " + data
 
                 else:
                     preferenceIT.append(data)
@@ -326,11 +331,13 @@ def profileBuilder(file, email, Technique):
                     queryEN += " " + data
                     queryIT += " " + data
 
-    print(preferenceEN)
+    #print(preferenceEN)
+    print(queryEN)
 
+    if len(queryEN) > 10 and len(preferenceEN) >= 1:
+        #preferencePositiveEN = np.hstack(queryEN)
+        preferencePositiveEN = pp.preprocess_string(queryEN,CUSTOM_FILTERS)
 
-    if len(queryEN) > 10 and len(preferenceEN) >= 2:
-        preferencePositiveEN = np.hstack(queryEN)
         if Technique == 1:
 
             getNewsRecommendationW2V('newsEN.csv', email, preferencePositiveEN, "rec_en.csv", alreadyLiked)
@@ -339,22 +346,22 @@ def profileBuilder(file, email, Technique):
         elif Technique == 3:
             getNewsRecommendationDoc2Vec('newsEN.csv', email, preferencePositiveEN, "rec_en.csv", alreadyLiked)
         else:
-            getNewsRecommendationLsi('newsEn.csv', email, queryEN, "rec_en.csv", alreadyLiked)
+            getNewsRecommendationLsi('newsEn.csv', email,preferencePositiveEN, "rec_en.csv", alreadyLiked)
 
     if len(queryIT) > 10 and len(preferenceIT) >= 2:
-        preferencePositiveIT = np.hstack(queryIT)
+        preferencePositiveIT = pp.preprocess_string(queryIT,CUSTOM_FILTERS)
         if Technique == 1:
             getNewsRecommendationW2V('newsIta.csv', email, preferencePositiveIT, "rec_it.csv", alreadyLiked)  # ITA
         elif Technique == 2:
             getNewsRecommendationFastText('newsIta.csv', email, preferencePositiveIT, "rec_it.csv", alreadyLiked)  # ITA
         elif Technique == 3:
             getNewsRecommendationDoc2Vec('newsIta.csv', email, preferencePositiveIT, "rec_it.csv", alreadyLiked)  # ITA
-        else:
-            getNewsRecommendationLsi('newsIta.csv', email, queryIT, "rec_it.csv", alreadyLiked)  # ITA
+        #else:
+         #   getNewsRecommendationLsi('newsIta.csv', email, preferencePositiveIT, "rec_it.csv", alreadyLiked)  # ITA
 
 
 def mainRun():
-    Technique = 2
+    Technique = 4
     try:
         f = open('rec_it.csv', 'r+')
         f.truncate(0)
@@ -362,7 +369,9 @@ def mainRun():
         f.truncate(0)
     except:
         print("file to be created")
-        # f = open('rec_it.csv', 'w')
+
+    #nltk.download('punkt')
+    #nltk.download('averaged_perceptron_tagger')
 
     # Lettura file degli utenti di Myrror
     for (dirpath, dirnames, filenames) in walk("fileMyrror"):
@@ -370,7 +379,6 @@ def mainRun():
             if file.startswith('past_'):
                 email = file.split("past_", 1)[1]
                 email = os.path.splitext(email)[0]
-
                 profileBuilder(file, email, Technique)
 
 
@@ -378,7 +386,7 @@ def mainRun():
 #wv = api.load('word2vec-google-news-300')
 
 # Utilizzo FastText
-ft = load_facebook_model('fasttext/wiki.simple.bin')
+#ft = load_facebook_model('fasttext/wiki.simple.bin')
 
 # Utilizzo Doc2Vec
 #dv = Doc2Vec.load('doc2vec/doc2vec.bin')
