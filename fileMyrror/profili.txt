@@ -1,0 +1,20 @@
+- profilo pop/hip hop/reggaeton
+email: giuseppe@seven.it
+password: giuseppe
+
+
+-profilo house/afrobeat/afropop/techno
+email: marco@seven.it
+password: marco
+
+-profilo classico
+email:cristiano@seven.it
+password:cristiano
+
+-profilo anni '80/90 eurodance europop italo dance/rock/hard rock/irish rock/soft rock/dance rock new romantic
+email: luca@seven.it
+password: luca
+
+-profilo blues/jazz/post-bop cool jazz hard bop jazz jazz/acoustic blues blues boogie-woogie/acid rock blues rock classic
+email: nicola@seven.it
+password: nicola

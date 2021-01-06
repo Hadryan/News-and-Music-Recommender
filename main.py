@@ -1,5 +1,5 @@
 import sys
-import run
+#import recsys
 import feedparser
 import io
 import time
@@ -28,7 +28,19 @@ categorieEn = [
     'https://www.theguardian.com/world/rss',
     'https://www.cnbc.com/id/100727362/device/rss/rss.html',
     'https://www.euronews.com/rss?level=theme&name=news',
-    'https://www.pbs.org/wgbh/nova/rss/all/'
+    'https://www.pbs.org/wgbh/nova/rss/all/',
+
+    'https://rss.nytimes.com/services/xml/rss/nyt/Golf.xml',
+    'https://rss.nytimes.com/services/xml/rss/nyt/Tennis.xml',
+    'https://rss.nytimes.com/services/xml/rss/nyt/ProFootball.xml',
+    'https://rss.nytimes.com/services/xml/rss/nyt/ProBasketball.xml',
+    'https://rss.nytimes.com/services/xml/rss/nyt/Science.xml',
+    'https://rss.nytimes.com/services/xml/rss/nyt/Space.xml',
+    'https://rss.nytimes.com/services/xml/rss/nyt/Sports.xml',
+    'https://rss.nytimes.com/services/xml/rss/nyt/Soccer.xml',
+    'https://rss.nytimes.com/services/xml/rss/nyt/Baseball.xml',
+    'https://rss.nytimes.com/services/xml/rss/nyt/Dance.xml',
+    'https://rss.nytimes.com/services/xml/rss/nyt/Movies.xml'
 ]
 
 categorieIt = [
@@ -129,6 +141,7 @@ def readFeedRss(categorie_lan, lan, fileName):
                         myfile.write(cat + ";")
                         myfile.write(str(datetime.timestamp(now)) + ";")  # timestamp
 
+                        article_description = article_description.replace('View Full Coverage on Google News', '')
                         article_description = article_description.replace(';', ',')
                         article_description = article_description.replace(' ', ' ')
                         myfile.write(article_description + "\n")
@@ -221,4 +234,4 @@ ticker = threading.Event()
 while not ticker.wait(WAIT_SECONDS):
     runFeed(timeClean)  # come argomento si imposta il limite di giorni per le news da eliminare
     WAIT_SECONDS = 60 * 60 * timeReload
-    #run.mainRun() # chiamo run.py
+    # run.mainRun() # chiamo run.py

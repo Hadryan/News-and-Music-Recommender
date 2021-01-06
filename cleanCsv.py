@@ -12,7 +12,6 @@ df = df.drop_duplicates(subset="artist_lastfm", keep="first")  # rimuovo i dupli
 # Elimino le colonne
 df = df.drop('country_mb', 1)
 df = df.drop('country_lastfm', 1)
-df = df.drop('listeners_lastfm', 1)
 df = df.drop('scrobbles_lastfm', 1)
 df = df.drop('ambiguous_artist', 1)
 
@@ -22,7 +21,8 @@ df.to_csv('artistMiddle.csv', index=False)
 
 # Leggo dal file csv
 df = pd.read_csv('artistMiddle.csv',
-                 dtype={"mbid": "string", "artist_mb": "string", "artist_lastfm": "string", "tags_mb": "string", "tags_lastfm": "string"})
+                 dtype={"mbid": "string", "artist_mb": "string", "artist_lastfm": "string", "tags_mb": "string"
+                     , "tags_lastfm": "string", "listeners_lastfm": "string"})
 
 # Controllo artista e genere
 i = 0
@@ -46,11 +46,15 @@ for index, row in df.iterrows():
     print(i)
 
 
-
 # Elimino le colonne
 df = df.drop('artist_lastfm', 1)
 df = df.drop('tags_lastfm', 1)
 
+# Se il genere non è presente elimino la riga
+for index, row in df.iterrows():
+    if pd.isnull(row['tags_mb']):
+        df.drop(index, inplace=True)  # elimino intera riga
 
 # Crea il csv
 df.to_csv('artistCleanOutput.csv', index=False)
+
