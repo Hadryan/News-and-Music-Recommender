@@ -1,22 +1,19 @@
 import sys
-#import recsys
 import feedparser
 import io
-import time
 from newspaper import Article
 import threading
 import csv
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
+import recsys
+import musicRecommender
 
 categorieEn = [
-
     'https://news.google.com/news/rss/headlines/section/topic/BUSINESS?hl=en-US&gl=US',
     'https://news.google.com/news/rss/headlines/section/topic/TECHNOLOGY?hl=en-US&gl=US',
-
     'https://news.google.com/news/rss/headlines/section/topic/WORLD?hl=en-US&gl=US',
     'https://news.google.com/news/rss/headlines/section/topic/ENTERTAINMENT?hl=en-US&gl=US',
-
     'https://news.google.com/news/rss/headlines/section/topic/SPORTS?hl=en-US&gl=US',
     'https://news.google.com/news/rss/headlines/section/topic/SCIENCE?hl=en-US&gl=US',
     'https://news.google.com/news/rss/headlines/section/topic/HEALTH?hl=en-US&gl=US',
@@ -29,7 +26,6 @@ categorieEn = [
     'https://www.cnbc.com/id/100727362/device/rss/rss.html',
     'https://www.euronews.com/rss?level=theme&name=news',
     'https://www.pbs.org/wgbh/nova/rss/all/',
-
     'https://rss.nytimes.com/services/xml/rss/nyt/Golf.xml',
     'https://rss.nytimes.com/services/xml/rss/nyt/Tennis.xml',
     'https://rss.nytimes.com/services/xml/rss/nyt/ProFootball.xml',
@@ -46,15 +42,12 @@ categorieEn = [
 categorieIt = [
     'https://news.google.com/news/rss/headlines/section/topic/BUSINESS?hl=it-IT&gl=IT',
     'https://news.google.com/news/rss/headlines/section/topic/TECHNOLOGY?hl=it-IT&gl=IT',
-
     'https://news.google.com/news/rss/headlines/section/topic/WORLD?hl=it-IT&gl=IT',
     'https://news.google.com/news/rss/headlines/section/topic/ENTERTAINMENT?hl=it-IT&gl=IT',
-
     'https://news.google.com/news/rss/headlines/section/topic/SPORTS?hl=it-IT&gl=IT',
     'https://news.google.com/news/rss/headlines/section/topic/SCIENCE?hl=it-IT&gl=IT',
     'https://news.google.com/news/rss/headlines/section/topic/HEALTH?hl=it-IT&gl=IT',
     'https://news.google.com/rss?hl=it-IT&gl=IT&ceid=IT:it',
-
     'http://xml2.corriereobjects.it/rss/homepage.xml',
     'https://www.ansa.it/sito/notizie/cultura/cultura_rss.xml',
     'http://rss.adnkronos.com/RSS_Sostenibilita.xml',
@@ -84,12 +77,10 @@ categorieIt = [
 # fileName = "newsIta.csv"/"newsEn.csv"
 def readFeedRss(categorie_lan, lan, fileName):
     categorie = categorie_lan
-
     now = datetime.now()
 
     i = 0
     for c in categorie:
-
         if i == 0:
             cat = "BUSINESS"
         elif i == 1:
@@ -168,6 +159,7 @@ def checkFile(link, fileName):
     return False
 
 
+# Avvia il feed per il download delle news
 def runFeed(daysLimit):
     # creating thread
     t1 = threading.Thread(target=readFeedRss, args=(categorieIt, 'it', "newsIta.csv",))
@@ -223,15 +215,26 @@ def deleteNews(fileName, daysLimit):
 
 
 try:
-    timeReload = sys.argv[1]  # ore
-    timeClean = sys.argv[2]  # giorni
+    timeReload = sys.argv[1]  # ore per il download di nuove news/raccomandazioni musica e news
+    timeClean = sys.argv[2]  # giorni per la pulizia di vecchie news
 except:
-    timeReload = 12  # ore
-    timeClean = 2  # giorni
+    timeReload = 12  # ore per il download di nuove news
+    timeClean = 2  # giorni per la pulizia di vecchie news
 
-WAIT_SECONDS = 2
+WAIT_SECONDS = 0
 ticker = threading.Event()
 while not ticker.wait(WAIT_SECONDS):
-    runFeed(timeClean)  # come argomento si imposta il limite di giorni per le news da eliminare
+
+    # Imposto il tempo
     WAIT_SECONDS = 60 * 60 * timeReload
-    # run.mainRun() # chiamo run.py
+
+    # Download delle news
+    runFeed(timeClean)  # come argomento si imposta il limite di giorni per le news da eliminare
+
+    # Eseguo tutte le tecniche di raccomandazione per la musica (w2v, d2v, fastText, lsi)
+    for i in range(1, 5):
+        musicRecommender.mainRun(i)
+
+    # Eseguo tutte le tecniche di raccomandazione per le news (w2v, d2v, fastText, lsi)
+    for i in range(1, 5):
+        recsys.mainRun(i)
