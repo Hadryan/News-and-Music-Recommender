@@ -354,7 +354,7 @@ def profileBuilder(file, email, Technique):
         elif Technique == 3:  # Doc2Vec
             getNewsRecommendationDoc2Vec('newsIta.csv', email, preferencePositiveIT, "rec_news_d2v_it.csv", alreadyLiked)
         elif Technique == 4:  # Lsi
-            getNewsRecommendationLsi('newsIta.csv', email, preferencePositiveIT, "rec_it.csv", alreadyLiked, dim)
+            getNewsRecommendationLsi('newsIta.csv', email, preferencePositiveIT, "rec_news_lsi_it.csv", alreadyLiked, dim)
 
 
 def mainRun(Technique):
