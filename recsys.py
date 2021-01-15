@@ -231,6 +231,7 @@ def getNewsRecommendationLsi(fileName, email, query, fileRatings, alreadyLiked, 
     tfidf = gensim.models.TfidfModel(bow_corpus, smartirs='npu')
     corpus_tfidf = tfidf[bow_corpus]
 
+    '''
     if dim > 300:
         num_topics = 200
     else:
@@ -239,7 +240,13 @@ def getNewsRecommendationLsi(fileName, email, query, fileRatings, alreadyLiked, 
     if dim > 1000:
         num_topics = 200
 
+    if dim > 2100:
+        num_topixs = 200
+    
     # 2200 limit for words
+    '''
+
+    num_topics = 200
 
     lsiModel = gensim.models.LsiModel(corpus_tfidf, id2word=dictionary, num_topics=num_topics, chunksize=100)
     # print(lsiModel.print_topics(num_topics=num_topics,num_words=5))
@@ -323,8 +330,8 @@ def profileBuilder(file, email, Technique):
                     query += " " + data
 
     dim = len(queryEN)
-    if dim < 10:
-        queryEN += query
+    #if dim < 10:
+    queryEN += query
     dim = len(queryEN)
 
     # INGLESE
@@ -342,8 +349,8 @@ def profileBuilder(file, email, Technique):
 
     # ITALIANO
     dim = len(queryIT)
-    if dim < 10:
-        queryIT += query
+    #if dim < 10:
+    queryIT += query
     if len(queryIT) > 10 and len(preferenceIT) >= 2:
         preferencePositiveIT = pp.preprocess_string(queryIT, CUSTOM_FILTERS)
 
