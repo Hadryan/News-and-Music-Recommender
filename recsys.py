@@ -486,4 +486,4 @@ ft = FastText.load_fasttext_format('fasttext/wiki.simple.bin')
 # Utilizzo Doc2Vec
 dv = Doc2Vec.load('doc2vec/doc2vec.bin')
 
-mainRun(3)
+#mainRun(3)
