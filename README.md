@@ -23,8 +23,11 @@ https://mega.nz/file/qUcnEarR#p-79IO4s98sRTTjerNxY2KGzh6MVZyOg35aHHQ9O224
 Il file zip va estratto all'interno della cartella Recommender.
 
 Per il deploy sul server:
+
   cd var/www/html/Recommender
+
   source virtualenvironment/project/bin/activate
+
   forever start -a -o ./out.log -e ./err.log -c python main.py
   
  
