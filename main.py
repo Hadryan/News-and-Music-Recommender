@@ -6,8 +6,8 @@ import threading
 import csv
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
-import recsys
-import musicRecommender
+import gc
+
 
 categorieEn = [
     'https://news.google.com/news/rss/headlines/section/topic/BUSINESS?hl=en-US&gl=US',
@@ -57,13 +57,11 @@ categorieIt = [
     'http://rss.adnkronos.com/RSS_Immediapress.xml',
     'https://www.ansa.it/sito/notizie/cultura/cultura_rss.xml',
     'https://www.ilsole24ore.com/rss/salute.xml',
-    'https://www.gazzetta.it/rss/home.xml',
     'https://www.ilsole24ore.com/rss/moda.xml',
     'https://www.ilsole24ore.com/rss/arteconomy.xml',
     'https://www.ilsole24ore.com/rss/finanza.xml',
     'https://www.ilsole24ore.com/rss/norme-e-tributi.xml',
     'https://www.ilsole24ore.com/rss/food.xml',
-    'https://www.ansa.it/canale_terraegusto/notizie/terraegusto_rss.xml',
     'https://www.ilsole24ore.com/rss/management.xml',
     'https://www.ilsole24ore.com/rss/risparmio.xml',
     'https://www.ilsole24ore.com/rss/cultura.xml',
@@ -123,19 +121,20 @@ def readFeedRss(categorie_lan, lan, fileName):
 
                     if not (
                             ";" in article_link or ";" in image):  # se sono presenti i ; nei link e nelle immagini allora non scrivo la notizia
-                        article_title = article_title.replace(';',
-                                                              ' ')  # sostituisco il ; se presente nel titolo con uno spazio
-                        myfile.write(article_title + ";")
+                       if(len(article_description) > 10):
+                            article_title = article_title.replace(';',
+                                                                  ' ')  # sostituisco il ; se presente nel titolo con uno spazio
+                            myfile.write(article_title + ";")
 
-                        myfile.write(article_link + ";")
-                        myfile.write(image + ";")
-                        myfile.write(cat + ";")
-                        myfile.write(str(datetime.timestamp(now)) + ";")  # timestamp
+                            myfile.write(article_link + ";")
+                            myfile.write(image + ";")
+                            myfile.write(cat + ";")
+                            myfile.write(str(datetime.timestamp(now)) + ";")  # timestamp
 
-                        article_description = article_description.replace('View Full Coverage on Google News', '')
-                        article_description = article_description.replace(';', ',')
-                        article_description = article_description.replace(' ', ' ')
-                        myfile.write(article_description + "\n")
+                            article_description = article_description.replace('View Full Coverage on Google News', '')
+                            article_description = article_description.replace(';', ',')
+                            article_description = article_description.replace(' ', ' ')
+                            myfile.write(article_description + "\n")
 
 
 # Controlla i doppi inserimenti nel file
@@ -162,20 +161,21 @@ def checkFile(link, fileName):
 # Avvia il feed per il download delle news
 def runFeed(daysLimit):
     # creating thread
-    t1 = threading.Thread(target=readFeedRss, args=(categorieIt, 'it', "newsIta.csv",))
-    t2 = threading.Thread(target=readFeedRss, args=(categorieEn, 'en', "newsEn.csv",))
+    #t1 = threading.Thread(target=readFeedRss, args=(categorieIt, 'it', "newsIta.csv",))
+    #t2 = threading.Thread(target=readFeedRss, args=(categorieEn, 'en', "newsEn.csv",))
 
     # starting thread 1
     print("Feed ITA started!")
-    t1.start()
+    readFeedRss(categorieIt, 'it', "newsIta.csv")
+    #t1.start()
     # starting thread 2
     print("Feed EN started!")
-    t2.start()
-
+    #t2.start()
+    readFeedRss(categorieEn, 'en', "newsEn.csv")
     # wait until thread 1 is completely executed
-    t1.join()
+    #t1.join()
     # wait until thread 2 is completely executed
-    t2.join()
+    #t2.join()
 
     # both threads completely executed
     print("Feed ita/en completed!")
@@ -229,12 +229,20 @@ while not ticker.wait(WAIT_SECONDS):
     WAIT_SECONDS = 60 * 60 * timeReload
 
     # Download delle news
-    runFeed(timeClean)  # come argomento si imposta il limite di giorni per le news da eliminare
-
+    runFeed(timeClean) 
+     # come argomento si imposta il limite di giorni per le news da eliminare
+    gc.collect()
+    #time.sleep(60)
+    
+    import musicRecommender
     # Eseguo tutte le tecniche di raccomandazione per la musica (w2v, d2v, fastText, lsi)
     for i in range(1, 5):
         musicRecommender.mainRun(i)
-
-    # Eseguo tutte le tecniche di raccomandazione per le news (w2v, d2v, fastText, lsi)
+        gc.collect()
+    #time.sleep(60)
+        # Eseguo tutte le tecniche di raccomandazione per le news (w2v, d2v, fastText, lsi)
+    import recsys
     for i in range(1, 5):
         recsys.mainRun(i)
+        gc.collect()
+

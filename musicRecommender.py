@@ -10,11 +10,17 @@ from scipy import spatial
 from os import walk
 import os
 from operator import itemgetter
-from gensim.models.fasttext import load_facebook_model
+#from gensim.models.fasttext import load_facebook_model
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 import pandas as pd
 from gensim.corpora import Dictionary
 from gensim.models import LdaModel
+import time
+import gc
+global wv
+global ft
+global dv
+from gensim.models.wrappers import FastText
 
 # pre-processing operations to apply
 CUSTOM_FILTERS = [lambda x: x.lower(),
@@ -371,58 +377,67 @@ def getMusicRecommendationLDA(fileName, email, query, fileRatings, alreadyLiked)
 
 def profileBuilder(file, email, Technique):
     # Apertura file JSON
-    f = open('fileMyrror/' + file)
+    f = open('../fileMyrror/' + file)
+    try:
+        # Ritorna JSON come oggetto
+        data = json.load(f)
 
-    # Ritorna JSON come oggetto
-    data = json.load(f)
+        # Chiusura del file JSON
+        f.close()
 
-    # Chiusura del file JSON
-    f.close()
+        # Lista contenente le preferenze positive dell'utente
+        preference = []
+        query = ""
+        alreadyLiked = []
 
-    # Lista contenente le preferenze positive dell'utente
-    preference = []
-    query = ""
-    alreadyLiked = []
+        # Itero attraverso la lista JSON
+        for i in data['interests']:
 
-    # Itero attraverso la lista JSON
-    for i in data['interests']:
+            # Se abbiamo una preferenza positiva dell'utente per le news
+            if i['source'] == 'music_preference' and 'Like:' in i['value'] and not ('Dislike:' in i['value']) \
+                    and ('Genre:' in i['value'] or 'Artist:' in i['value']):
 
-        # Se abbiamo una preferenza positiva dell'utente per le news
-        if i['source'] == 'music_preference' and 'Like:' in i['value'] and not ('Dislike:' in i['value']) \
-                and ('Genre:' in i['value'] or 'Artist:' in i['value']):
+                data = i['value'].replace('Like:', '').replace('Artist:', '').replace('Genre:', '')
 
-            data = i['value'].replace('Like:', '').replace('Artist:', '').replace('Genre:', '')
+                if 'Artist' in i['value']:
+                    alreadyLiked.append(data.lower())
 
-            if 'Artist' in i['value']:
-                alreadyLiked.append(data.lower())
+                if len(data) > 2:
+                    preference.append(data)
+                    query += " " + data
 
-            if len(data) > 2:
-                preference.append(data)
-                query += " " + data
+        if len(query) > 10 and len(preference) >= 3:
 
-    if len(query) > 10 and len(preference) >= 3:
+            newPreference = ''
+            for a in preference:
+                a = a.replace(';', ' ')
+                newPreference += a + ' '
+            newPreference = newPreference.split(' ')
 
-        newPreference = ''
-        for a in preference:
-            a = a.replace(';', ' ')
-            newPreference += a + ' '
-        newPreference = newPreference.split(' ')
+            if Technique == 1:
 
-        if Technique == 1:
-            getMusicRecommendationW2V('artistCleanOutput.csv', email, newPreference, "rec_music_w2v.csv", alreadyLiked)
-        elif Technique == 2:
-            getMusicRecommendationFastText('artistCleanOutput.csv', email, newPreference, "rec_music_ft.csv",
-                                           alreadyLiked)
-        elif Technique == 3:
-            getMusicRecommendationDoc2Vec('artistCleanOutput.csv', email, newPreference, "rec_music_d2v.csv",
-                                          alreadyLiked)
-        elif Technique == 4:
-            getMusicRecommendationLsi('artistCleanOutput.csv', email, newPreference, "rec_music_lsi.csv", alreadyLiked)
+                getMusicRecommendationW2V('artistCleanOutput.csv', email, newPreference, "rec_music_w2v.csv", alreadyLiked)
+            elif Technique == 4:
+
+                getMusicRecommendationFastText('artistCleanOutput.csv', email, newPreference, "rec_music_ft.csv",
+                                               alreadyLiked)
+            elif Technique == 3:
+                getMusicRecommendationDoc2Vec('artistCleanOutput.csv', email, newPreference, "rec_music_d2v.csv",
+                                              alreadyLiked)
+            elif Technique == 2:
+                getMusicRecommendationLsi('artistCleanOutput.csv', email, newPreference, "rec_music_lsi.csv", alreadyLiked)
+    except:
+        print("skipped" + email)
 
 
 def mainRun(Technique):
+    global ft
+    global wv
+    global dv
 
     if Technique == 1:  # Word2Vec
+
+        wv = api.load('word2vec-google-news-300')
         print("\nTecnica di raccomandazione musica: Word2Vec")
         try:
             f = open('rec_music_w2v.csv', 'r+')
@@ -431,16 +446,16 @@ def mainRun(Technique):
             print("Creazione file rec_music_w2v.csv...")
             f = open('rec_music_w2v.csv', 'w')
             f.close()
-    elif Technique == 2:  # FastText
-        print("\nTecnica di raccomandazione musica: FastText")
-        try:
-            f = open('rec_music_ft.csv', 'r+')
-            f.truncate(0)
-        except:
-            print("Creazione file rec_music_ft.csv...")
-            f = open('rec_music_ft.csv', 'w')
-            f.close()
+
     elif Technique == 3:  # Doc2vec
+
+        # del wv
+
+
+        # del globals()[ft]
+        #time.sleep(20)
+        gc.collect()
+        dv = Doc2Vec.load("doc2vec_modelMusic")
         print("\nTecnica di raccomandazione musica: DocVec")
         try:
             f = open('rec_music_d2v.csv', 'r+')
@@ -449,7 +464,30 @@ def mainRun(Technique):
             print("Creazione file rec_music_d2v.csv...")
             f = open('rec_music_d2v.csv', 'w')
             f.close()
-    elif Technique == 4:  # Lsi
+    elif Technique == 4:  # FastText
+
+
+        #del globals()[wv]
+
+        gc.collect()
+        ft = FastText.load_fasttext_format('fasttext/wiki.simple.bin')
+        #ft = load_facebook_model('fasttext/wiki.simple.bin')
+        print("\nTecnica di raccomandazione musica: FastText")
+        try:
+            f = open('rec_music_ft.csv', 'r+')
+            f.truncate(0)
+        except:
+            print("Creazione file rec_music_ft.csv...")
+            f = open('rec_music_ft.csv', 'w')
+            f.close()
+
+    elif Technique == 2:  # Lsi
+
+
+
+        #del globals()[dv]
+        #time.sleep(10)
+        gc.collect()
         print("\nTecnica di raccomandazione musica: Lsi")
         try:
             f = open('rec_music_lsi.csv', 'r+')
@@ -460,22 +498,35 @@ def mainRun(Technique):
             f.close()
 
     # Lettura file degli utenti di Myrror
-    for (dirpath, dirnames, filenames) in walk("fileMyrror"):
+    for (dirpath, dirnames, filenames) in walk("../fileMyrror"):
         for file in filenames:
             if file.startswith('past_'):
                 email = file.split("past_", 1)[1]
                 email = os.path.splitext(email)[0]
 
                 profileBuilder(file, email, Technique)
+    if Technique == 1:
+        del wv
+    elif Technique == 3:
+        del dv
+    elif Technique == 4:
+        del ft
+
+    time.sleep(20)
+    gc.collect()
 
 
 # Utilizzo Word2Vec
-wv = api.load('word2vec-google-news-300')
+#wv = api.load('word2vec-google-news-300')
+
 
 # Utilizzo FastText
-ft = load_facebook_model('fasttext/wiki.simple.bin')
+#ft = load_facebook_model('fasttext/wiki.simple.bin')
 
 # Utilizzo Doc2Vec
-dv = Doc2Vec.load("doc2vec_modelMusic")  # you can continue training with the loaded model!
+  # you can continue training with the loaded model!
 
 # mainRun(1)
+
+#for i in range(1, 5):
+ #      mainRun(i)

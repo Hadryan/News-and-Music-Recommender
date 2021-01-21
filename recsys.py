@@ -1,3 +1,4 @@
+# -*- coding: iso-8859-15 -*-
 import json
 import io
 import csv
@@ -15,6 +16,8 @@ from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from gensim.models import Word2Vec
 from gensim.models.wrappers import FastText
 
+ft = []
+dv = []
 # Pre-processing operations to apply
 CUSTOM_FILTERS = [lambda x: x.lower(), pp.strip_tags,
                   pp.strip_punctuation,
@@ -51,26 +54,27 @@ def getNewsRecommendationW2V(fileName, email, preference, fileRatings, alreadyLi
         reader = csv.reader(file, delimiter=';')
         for row in reader:
 
-            if row[5] and len(row[5]) > 10:
-                news = []  # creo lista vuota che ocnterrà le info dell'utente per una determinata news
+                if row[5] and len(row[5]) > 10:
+                    news = []  # creo lista vuota che ocnterrà le info dell'utente per una determinata news
 
-                pp_news = pp.preprocess_string(row[5],
-                                               CUSTOM_FILTERS)  # Faccio il pre-processing della descrizione della notizia
+                    pp_news = pp.preprocess_string(row[5],
+                                                   CUSTOM_FILTERS)  # Faccio il pre-processing della descrizione della notizia
 
-                if len(pp_news) > 2:
-                    # Calcolo il centroide per ogni news
-                    newsVector = calculate_centroid(pp_news, 1,wv)
+                    if len(pp_news) > 2:
+                        # Calcolo il centroide per ogni news
+                        newsVector = calculate_centroid(pp_news, 1,wv)
 
-                    # Calcolo la cosine similarity tra il centroide della news ed il centroide della preferenza dell'utente
-                    cos_sim = 1 - spatial.distance.cosine(query, newsVector)
+                        # Calcolo la cosine similarity tra il centroide della news ed il centroide della preferenza dell'utente
+                        cos_sim = 1 - spatial.distance.cosine(query, newsVector)
 
-                    # Info sulla news
-                    news.append(email)  # email
-                    news.append(row[1])  # link
-                    news.append(cos_sim)  # cosine similarity
+                        # Info sulla news
+                        news.append(email)  # email
+                        news.append(row[1])  # link
+                        news.append(cos_sim)  # cosine similarity
 
-                    # Inserisco la news in una lista di news
-                    userNews.append(news)
+                        # Inserisco la news in una lista di news
+                        userNews.append(news)
+
 
     file.close()
 
@@ -82,7 +86,7 @@ def getNewsRecommendationW2V(fileName, email, preference, fileRatings, alreadyLi
 
         i = 0
         for news in userNews:
-            if i > 2:
+            if i > 4:
                 break
 
             if not (news[1] in alreadyLiked):
@@ -137,7 +141,7 @@ def getNewsRecommendationFastText(fileName, email, preference, fileRatings, alre
         i = 0
 
         for news in userNews:
-            if i > 5:
+            if i > 4:
                 break
 
             if not (news[1] in alreadyLiked):
@@ -194,7 +198,7 @@ def getNewsRecommendationDoc2Vec(fileName, email, preference, fileRatings, alrea
     with io.open(fileRatings, "a", encoding="utf-8") as myfile:
         i = 0
         for news in userNews:
-            if i > 5:
+            if i > 4:
                 break
 
             if not (news[1] in alreadyLiked):
@@ -238,9 +242,7 @@ def getNewsRecommendationLsi(fileName, email, query, fileRatings, alreadyLiked, 
     lsiModel = gensim.models.LsiModel(corpus_tfidf, id2word=dictionary, num_topics=num_topics, chunksize=100)
     # print(lsiModel.print_topics(num_topics=num_topics,num_words=5))
     index = gensim.similarities.MatrixSimilarity(lsiModel[corpus_tfidf])
-
     new_vec = dictionary.doc2bow(query)
-
     vec_bow_tfidf = tfidf[new_vec]
     sims = index[vec_bow_tfidf]
 
@@ -262,108 +264,112 @@ def getNewsRecommendationLsi(fileName, email, query, fileRatings, alreadyLiked, 
 
 def profileBuilder(file, email, Technique, wv_en,wv_it):
     # Apertura file JSON
-    f = open('fileMyrror/' + file)
+    f = open('../fileMyrror/' + file)
+    try:
 
-    # Ritorna JSON come oggetto
-    data = json.load(f)
+        # Ritorna JSON come oggetto
+        data = json.load(f)
 
-    # Chiusura del file JSON
-    f.close()
-    query = ""
+        # Chiusura del file JSON
+        f.close()
+        query = ""
 
-    # Lista contenente le preferenze positive dell'utente
-    preferenceIT = []
-    preferenceEN = []
-    queryIT = ""
-    queryEN = ""
-    alreadyLiked = []
+        # Lista contenente le preferenze positive dell'utente
+        preferenceIT = []
+        preferenceEN = []
+        queryIT = ""
+        queryEN = ""
+        alreadyLiked = []
 
-    # Itero attraverso la lista JSON
-    for i in data['interests']:
+        # Itero attraverso la lista JSON
+        for i in data['interests']:
 
-        if i['source'] == 'news_feedback':
-            if 'Like:' in i['value']:
-                _url = i['value'].replace('Like:', '')
-                alreadyLiked.append(_url)
-            elif 'Dislike:' in i['value']:
-                _url = i['value'].replace('Disike:', '')
-                alreadyLiked.append(_url)
+            if i['source'] == 'news_feedback':
+                if 'Like:' in i['value']:
+                    _url = i['value'].replace('Like:', '')
+                    alreadyLiked.append(_url)
+                elif 'Dislike:' in i['value']:
+                    _url = i['value'].replace('Disike:', '')
+                    alreadyLiked.append(_url)
 
-        # Se abbiamo una preferenza positiva dell'utente per le news
-        if i['source'] == 'news_preference' and 'Like:' in i['value'] and not ('Dislike:' in i['value']) and \
-                not (i['value'].startswith('URL:')):
-            data = i['value'].replace('Like:', '').replace('Topic:', '')
+            # Se abbiamo una preferenza positiva dell'utente per le news
+            if i['source'] == 'news_preference' and 'Like:' in i['value'] and not ('Dislike:' in i['value']) and \
+                    not (i['value'].startswith('URL:')):
+                data = i['value'].replace('Like:', '').replace('Topic:', '')
 
-            if len(data) > 2:
-                if data.endswith('::it'):
+                if len(data) > 2:
+                    if data.endswith('::it'):
 
-                    data = data.replace('::it', '')
-                    pp_news = pp.preprocess_string(pp.strip_short(data, minsize=3),
-                                                   CUSTOM_FILTERS)  # Faccio il pre-processing della descrizione della notizia
+                        data = data.replace('::it', '')
+                        pp_news = pp.preprocess_string(pp.strip_short(data, minsize=3),
+                                                       CUSTOM_FILTERS)  # Faccio il pre-processing della descrizione della notizia
 
-                    preferenceIT.append(pp_news)
-                    queryIT += " " + data.replace('::it', '')
+                        preferenceIT.append(pp_news)
+                        queryIT += " " + data.replace('::it', '')
 
-                elif data.endswith('::en'):
-                    data = data.replace('::en', '')
-                    pp_news = pp.preprocess_string(data, CUSTOM_FILTERS)
-                    preferenceEN.append(pp_news)
-                    queryEN += " " + data
+                    elif data.endswith('::en'):
+                        data = data.replace('::en', '')
+                        pp_news = pp.preprocess_string(data, CUSTOM_FILTERS)
+                        preferenceEN.append(pp_news)
+                        queryEN += " " + data
 
-                else:
-                    preferenceIT.append(data)
-                    preferenceEN.append(data)
-                    queryIT += " " + data
-                    queryEN += " " + data
+                    else:
+                        preferenceIT.append(data)
+                        preferenceEN.append(data)
+                        queryIT += " " + data
+                        queryEN += " " + data
 
-    #dim = len(queryEN)
-    #if dim < 10:
-    #queryEN += query
-    dim = len(queryEN)
-    if dim > 2000:
-        cut = dim - 2000
-        queryEN = queryEN[cut:]
+        #dim = len(queryEN)
+        #if dim < 10:
+        #queryEN += query
+        dim = len(queryEN)
+        if dim > 2000:
+            cut = dim - 2000
+            queryEN = queryEN[cut:]
 
-    # INGLESE
-    if dim > 10 and len(preferenceEN) >= 2:
-        preferencePositiveEN = pp.preprocess_string(queryEN, CUSTOM_FILTERS)
+        # INGLESE
+        if dim > 10 and len(preferenceEN) >= 2:
+            preferencePositiveEN = pp.preprocess_string(queryEN, CUSTOM_FILTERS)
 
-        if Technique == 1:  # Word2Vec
-            #print(preferencePositiveEN)
-            getNewsRecommendationW2V('newsEn.csv', email, preferencePositiveEN, "rec_news_w2v_en.csv", alreadyLiked,wv_en)
-        elif Technique == 2:  # FastText
-            getNewsRecommendationFastText('newsEn.csv', email, preferencePositiveEN, "rec_news_ft_en.csv", alreadyLiked)
-        elif Technique == 3:  # Doc2Vec
-            getNewsRecommendationDoc2Vec('newsEn.csv', email, preferencePositiveEN, "rec_news_d2v_en.csv", alreadyLiked)
-        elif Technique == 4:  # Lsi
-            getNewsRecommendationLsi('newsEn.csv', email, preferencePositiveEN, "rec_news_lsi_en.csv", alreadyLiked, dim)
+            if Technique == 1:  # Word2Vec
+                #print(preferencePositiveEN)
+                getNewsRecommendationW2V('newsEn.csv', email, preferencePositiveEN, "rec_news_w2v_en.csv", alreadyLiked,wv_en)
+            elif Technique == 2:  # FastText
+                getNewsRecommendationFastText('newsEn.csv', email, preferencePositiveEN, "rec_news_ft_en.csv", alreadyLiked)
+            elif Technique == 3:  # Doc2Vec
+                getNewsRecommendationDoc2Vec('newsEn.csv', email, preferencePositiveEN, "rec_news_d2v_en.csv", alreadyLiked)
+            elif Technique == 4:  # Lsi
+                getNewsRecommendationLsi('newsEn.csv', email, preferencePositiveEN, "rec_news_lsi_en.csv", alreadyLiked, dim)
 
-    # ITALIANO
-    dim = len(queryIT)
-    #if dim < 10:
-    if dim > 2000:
-        cut = dim - 2000
-        queryIT = queryIT[cut:]
+        # ITALIANO
+        dim = len(queryIT)
+        #if dim < 10:
+        if dim > 2000:
+            cut = dim - 2000
+            queryIT = queryIT[cut:]
 
-    #queryIT += query
-    if len(queryIT) > 10 and len(preferenceIT) >= 2:
-        preferencePositiveIT = pp.preprocess_string(queryIT, CUSTOM_FILTERS)
+        #queryIT += query
+        if len(queryIT) > 10 and len(preferenceIT) >= 2:
+            preferencePositiveIT = pp.preprocess_string(queryIT, CUSTOM_FILTERS)
 
-        if Technique == 1:  # Word2Vec
-            print(preferencePositiveIT)
-            getNewsRecommendationW2V('newsIta.csv', email, preferencePositiveIT, "rec_news_w2v_it.csv", alreadyLiked,
-                                     wv_it)
-        elif Technique == 2:  # FastText
-            getNewsRecommendationFastText('newsIta.csv', email, preferencePositiveIT, "rec_news_ft_it.csv", alreadyLiked)
-        elif Technique == 3:  # Doc2Vec
-            getNewsRecommendationDoc2Vec('newsIta.csv', email, preferencePositiveIT, "rec_news_d2v_it.csv", alreadyLiked)
-        elif Technique == 4:  # Lsi
-            getNewsRecommendationLsi('newsIta.csv', email, preferencePositiveIT, "rec_news_lsi_it.csv", alreadyLiked, dim)
-
+            if Technique == 1:  # Word2Vec
+                print(preferencePositiveIT)
+                getNewsRecommendationW2V('newsIta.csv', email, preferencePositiveIT, "rec_news_w2v_it.csv", alreadyLiked,
+                                         wv_it)
+            elif Technique == 2:  # FastText
+                getNewsRecommendationFastText('newsIta.csv', email, preferencePositiveIT, "rec_news_ft_it.csv", alreadyLiked)
+            elif Technique == 3:  # Doc2Vec
+                getNewsRecommendationDoc2Vec('newsIta.csv', email, preferencePositiveIT, "rec_news_d2v_it.csv", alreadyLiked)
+            elif Technique == 4:  # Lsi
+                getNewsRecommendationLsi('newsIta.csv', email, preferencePositiveIT, "rec_news_lsi_it.csv", alreadyLiked, dim)
+    except:
+        print("skipped" + email)          
 
 def mainRun(Technique):
     wv_en = []
     wv_it = []
+    global dv
+    global ft
 
     if Technique == 1:  # Word2Vec
         wv_en = trainW2V("newsEn.csv")
@@ -379,7 +385,7 @@ def mainRun(Technique):
             print("Creazione file rec_news_w2v_en.csv...")
 
     elif Technique == 2:  # FastText
-
+        ft = FastText.load_fasttext_format('fasttext/wiki.simple.bin')
         print("\nTecnica di raccomandazione news: FastText")
         try:
             f = open('rec_news_ft_it.csv', 'r+')
@@ -392,6 +398,7 @@ def mainRun(Technique):
 
     elif Technique == 3:  # Doc2Vec
         print("\nTecnica di raccomandazione news: Doc2Vec")
+        dv = Doc2Vec.load('doc2vec/doc2vec.bin')
         #wv_it = trainD2V("newsEn.csv")
         #wv_en = trainD2V("newsIta.csv")
         wv_it = dv
@@ -423,7 +430,7 @@ def mainRun(Technique):
 
 
     # Lettura file degli utenti di Myrror
-    for (dirpath, dirnames, filenames) in walk("fileMyrror"):
+    for (dirpath, dirnames, filenames) in walk("../fileMyrror"):
         for file in filenames:
             if file.startswith('past_'):
                 email = file.split("past_", 1)[1]
@@ -436,13 +443,17 @@ def trainW2V(fileName):
     with open(fileName, 'r', encoding='utf-8') as file:
         reader = csv.reader(file, delimiter=';')
         corpus = []
+
         for row in reader:
             #print(row[5])
-            if row[5] and len(row[5]) > 10:
-                pp_news = pp.preprocess_string(row[5],CUSTOM_FILTERS)  #
+            try:
+                if row[5] and len(row[5]) > 10:
+                    pp_news = pp.preprocess_string(row[5],CUSTOM_FILTERS)  #
 
-                if(len(pp_news) > 2):
-                    corpus.append(pp_news)
+                    if(len(pp_news) > 2):
+                        corpus.append(pp_news)
+            except:
+                print("skipped: " + row[0])
 
     EMBEDDING_FILE = 'GoogleNews-vectors-negative300.bin.gz'
     google_model = Word2Vec(size=300, window=5, min_count=2, workers=-1)
@@ -481,9 +492,12 @@ def trainD2V(fileName):
 #wv = api.load('GoogleNews-vectors-negative300.bin.gz')
 
 # Utilizzo FastText
-ft = FastText.load_fasttext_format('fasttext/wiki.simple.bin')
+#ft = FastText.load_fasttext_format('fasttext/wiki.simple.bin')
 
 # Utilizzo Doc2Vec
-dv = Doc2Vec.load('doc2vec/doc2vec.bin')
+#dv = Doc2Vec.load('doc2vec/doc2vec.bin')
 
-#mainRun(3)
+
+# mainRun(1)
+#for i in range(1, 5):
+ #      mainRun(i)
