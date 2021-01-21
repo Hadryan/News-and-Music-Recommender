@@ -9,8 +9,11 @@ infine si occupa di chiamare:
 Entrambi i recommender system producono 4 file di raccomandazione 1 per ogni tecnica implementata rispettivamente
 
 1)w2v (WORD2VEC)
+
 2)d2v (DOC2VEC)
+
 3)ft (FASTTEXT)
+
 4)lsi (LSA)
 
 Nel caso delle news i file verranno generati sia per l'inglese che per l'italiano
