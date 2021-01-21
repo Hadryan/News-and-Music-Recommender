@@ -30,4 +30,10 @@ Per il deploy sul server:
 
   forever start -a -o ./out.log -e ./err.log -c python main.py
   
+  Nel lanciare lo scirpt si possno personalizzare i parametri es.
+ main.py 12 3 
+Il primo parametro è il numero di ore entro le quali lo script per aggiornare i file e generare le raccomandazioni sarà riavviato
+Il secondo parametro è il numero di giorni dopo i quali le vecchie notizie presenti nel file delle news saranno cancellate
+Se non si indicano questi parametri di default saranno 12 e 4.
+  
  
