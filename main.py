@@ -219,7 +219,7 @@ try:
     timeClean = sys.argv[2]  # giorni per la pulizia di vecchie news
 except:
     timeReload = 12  # ore per il download di nuove news
-    timeClean = 2  # giorni per la pulizia di vecchie news
+    timeClean = 1  # giorni per la pulizia di vecchie news
 
 WAIT_SECONDS = 0
 ticker = threading.Event()
