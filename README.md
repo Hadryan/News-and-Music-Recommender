@@ -1,9 +1,9 @@
 # Recommender
 Questo progetto è un recommender system di articoli di giornale e artisti musicali.
 
-Il file main.py crea i file newsIta e newsEn tramite i feed RSS, infine si occupa di chiamare:
-1)musicRecommender che crea le raccomandazioni per la musica
-2)recsys crea le raccomandazioni per le notizie
+Il file main.py crea i file newsIta e newsEn tramite i feed RSS, infine si occupa di chiamare: 
+1)musicRecommender che crea le raccomandazioni per la musica;
+2)recsys crea le raccomandazioni per le notizie;
 
 Entrambi i recommender system producono 4 file di raccomandazione 1 per ogni tecnica implementata, rispettivamente:
 
