@@ -1,12 +1,11 @@
 # Recommender
 Questo progetto è un recommender system di articoli di giornale e artisti musicali.
 
-Il file main.py crea i file newsIta e newsEn tramite i feed RSS,
-infine si occupa di chiamare:
+Il file main.py crea i file newsIta e newsEn tramite i feed RSS, infine si occupa di chiamare:
 1)musicRecommender che crea le raccomandazioni per la musica
 2)recsys crea le raccomandazioni per le notizie
 
-Entrambi i recommender system producono 4 file di raccomandazione 1 per ogni tecnica implementata rispettivamente
+Entrambi i recommender system producono 4 file di raccomandazione 1 per ogni tecnica implementata, rispettivamente:
 
 1)w2v (WORD2VEC)
 
@@ -31,7 +30,7 @@ E' necessario scaricare i modelli pre-addestrati per word2vec fasttext e doc2vec
 E' possibile scaricare le librerie qui:
 https://mega.nz/file/qUcnEarR#p-79IO4s98sRTTjerNxY2KGzh6MVZyOg35aHHQ9O224
 
-Il file zip va estratto all'interno della cartella Recommender.
+Il file zip va estratto all'interno della cartella Recommender, dove sarà presente il codice di questo repository.
 
 Per il deploy sul server:
 
@@ -41,10 +40,10 @@ Per il deploy sul server:
 
   forever start -a -o ./out.log -e ./err.log -c python main.py
   
-  Nel lanciare lo scirpt si possno personalizzare i parametri es.
- main.py 12 3 
-Il primo parametro è il numero di ore entro le quali lo script per aggiornare i file e generare le raccomandazioni sarà riavviato
-Il secondo parametro è il numero di giorni dopo i quali le vecchie notizie presenti nel file delle news saranno cancellate
-Se non si indicano questi parametri di default saranno 12 e 4.
-  
+Nel lanciare lo script si possono personalizzare i parametri es.
+main.py 12 3 
+Il primo parametro è il numero di ore entro le quali lo script per aggiornare i file e generare le raccomandazioni sarà riavviato.
+Il secondo parametro è il numero di giorni dopo i quali le vecchie notizie presenti nel file delle news saranno cancellate.
+Se non vengono indicati, questi parametri assumono il valore di default pari a 12 e 1.
+
  
