@@ -46,4 +46,8 @@ Il primo parametro è il numero di ore entro le quali lo script per aggiornare i
 Il secondo parametro è il numero di giorni dopo i quali le vecchie notizie presenti nel file delle news saranno cancellate.
 Se non vengono indicati, questi parametri assumono il valore di default pari a 12 e 1.
 
+Per il deploy sul server i file delle news vengono svuotati ogni volta prima di essere creati, i vecchi articoli vengono quindi rimossi.
+Se si desidera evitare tutto ciò bisogna commentare in runFeed i comandi f.truncate e rimuovere i commenti sulla funzione
+deleteNews
+
  
