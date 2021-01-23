@@ -54,7 +54,7 @@ def getNewsRecommendationW2V(fileName, email, preference, fileRatings, alreadyLi
         reader = csv.reader(file, delimiter=';')
         for row in reader:
 
-                if row[5] and len(row[5]) > 10:
+                if index_in_list(row, 5) and len(row[5]) > 10:
                     news = []  # creo lista vuota che ocnterrà le info dell'utente per una determinata news
 
                     pp_news = pp.preprocess_string(row[5],
@@ -111,7 +111,7 @@ def getNewsRecommendationFastText(fileName, email, preference, fileRatings, alre
         reader = csv.reader(file, delimiter=';')
         for row in reader:
 
-            if row[5] and len(row[5]) > 10:
+            if index_in_list(row, 5) and len(row[5]) > 10:
                 news = []  # creo lista vuota che ocnterrà le info dell'utente per una determinata news
 
                 pp_news = pp.preprocess_string(row[5],
@@ -168,7 +168,7 @@ def getNewsRecommendationDoc2Vec(fileName, email, preference, fileRatings, alrea
         reader = csv.reader(file, delimiter=';')
         for row in reader:
 
-            if row[5] and len(row[5]) > 10:
+            if index_in_list(row, 5) and len(row[5]) > 10:
                 news = []  # creo lista vuota che ocnterrà le info dell'utente per una determinata news
 
                 pp_news = pp.preprocess_string(row[5],
@@ -223,7 +223,7 @@ def getNewsRecommendationLsi(fileName, email, query, fileRatings, alreadyLiked, 
         reader = csv.reader(file, delimiter=';')
 
         for row in reader:
-            if row[5] and len(row[5]) > 10:
+            if index_in_list(row, 5) and len(row[5]) > 10:
                 pp_news = pp.preprocess_string(row[5],
                                                CUSTOM_FILTERS)  # Faccio il pre-processing della descrizione della notizia
 
@@ -447,7 +447,7 @@ def trainW2V(fileName):
         for row in reader:
             #print(row[5])
             try:
-                if row[5] and len(row[5]) > 10:
+                if index_in_list(row, 5) and len(row[5]) > 10:
                     pp_news = pp.preprocess_string(row[5],CUSTOM_FILTERS)  #
 
                     if(len(pp_news) > 2):
@@ -462,6 +462,8 @@ def trainW2V(fileName):
     google_model.train(corpus, total_examples=google_model.corpus_count, epochs=5)
     return google_model.wv.wv
 
+def index_in_list(a_list, index):
+    return index < len(a_list)
 
 def trainD2V(fileName):
     with open(fileName, 'r', encoding='utf-8') as file:
@@ -489,7 +491,7 @@ def trainD2V(fileName):
 
 # Utilizzo Word2Vec
 #wv = api.load('word2vec-google-news-300')
-#wv = api.load('GoogleNews-vectors-negative300.bin.gz')
+
 
 # Utilizzo FastText
 #ft = FastText.load_fasttext_format('fasttext/wiki.simple.bin')
@@ -498,6 +500,6 @@ def trainD2V(fileName):
 #dv = Doc2Vec.load('doc2vec/doc2vec.bin')
 
 
-# mainRun(1)
+#mainRun(1)
 #for i in range(1, 5):
  #      mainRun(i)

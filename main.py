@@ -117,7 +117,7 @@ def readFeedRss(categorie_lan, lan, fileName):
                 image = "null"
 
             #if (not checkFile(article_title, fileName)) and (len(article_description) > 15):
-            if(len(article_description)  > 15 and article_link and article_title):
+            if(len(article_description)  > 15 and len(article_link) > 6  and len(article_title) > 6):
                 with io.open(fileName, "a", encoding="utf-8") as myfile:
 
                     if not (
