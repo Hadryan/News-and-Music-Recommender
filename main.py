@@ -116,7 +116,8 @@ def readFeedRss(categorie_lan, lan, fileName):
             except:
                 image = "null"
 
-            if (not checkFile(article_title, fileName)) and (len(article_description) > 10):
+            #if (not checkFile(article_title, fileName)) and (len(article_description) > 15):
+            if(len(article_description)  > 15 and article_link and article_title):
                 with io.open(fileName, "a", encoding="utf-8") as myfile:
 
                     if not (
@@ -163,7 +164,12 @@ def runFeed(daysLimit):
     # creating thread
     #t1 = threading.Thread(target=readFeedRss, args=(categorieIt, 'it', "newsIta.csv",))
     #t2 = threading.Thread(target=readFeedRss, args=(categorieEn, 'en', "newsEn.csv",))
-
+    f = open('newsIta.csv', 'r+')
+    f.truncate(0)
+    f.close()
+    f = open('newsEn.csv', 'r+')
+    f.truncate(0)
+    f.close()
     # starting thread 1
     print("Feed ITA started!")
     readFeedRss(categorieIt, 'it', "newsIta.csv")
@@ -181,8 +187,8 @@ def runFeed(daysLimit):
     print("Feed ita/en completed!")
 
     # delete old news
-    deleteNews("newsIta.csv", daysLimit)
-    deleteNews("newsEn.csv", daysLimit)
+    #deleteNews("newsIta.csv", daysLimit)
+    #deleteNews("newsEn.csv", daysLimit)
     print('News meno recenti eliminate')
 
 
@@ -192,6 +198,7 @@ def deleteNews(fileName, daysLimit):
 
     # make a day limit
     datelimit = datetime.today() - timedelta(days=daysLimit)
+    print(datelimit)
 
     # list of news to delete
     newsRecent = list()
